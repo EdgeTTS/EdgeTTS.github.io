@@ -1,5 +1,6 @@
 ﻿class SocketEdgeTTS {
-	constructor(_voice, _rate, _volume, _text) {
+	constructor(_filename, _voice, _rate, _volume, _text) {
+		this.my_filename = _filename
 		this.my_voice = _voice
 		this.my_rate = _rate
 		this.my_volume = _volume
@@ -55,9 +56,7 @@
 	}
 
 	onSocketClose() {
-		console.log("Connection is closed...")	
-		console.log(this.date_to_string())	
-		console.log(this.saved_mp3)	
+		console.log(this.my_filename + " closed...")
 		if ( this.saved_mp3 == false ) {
 			this.save_mp3()
 		}
@@ -103,7 +102,6 @@
 				combinedUint8Array.set(uint8_Array2, self.my_uint8Array.length)
 				self.my_uint8Array = combinedUint8Array	
 				
-				console.log(uint8_Array2.length)
 				if ( uint8_Array2.length < 1440 ) {
 					self.save_mp3()
 				}
@@ -112,6 +110,7 @@
 	}
 
 	start_works() {
+		console.log(this.my_filename + " start works...")
 		if ("WebSocket" in window) {
 			this.socket = new WebSocket(
 				"wss://speech.platform.bing.com/consumer/speech/synthesize/" +
@@ -157,7 +156,7 @@
 			const url = window.URL.createObjectURL(blob_mp3);
 			const link = document.createElement('a');
 			link.href = url;
-			link.download = 'audio.mp3';
+			link.download = this.my_filename + '.mp3';
 			document.body.appendChild(link);
 			link.click();
 			document.body.removeChild(link);
@@ -188,5 +187,4 @@
 	  }
 	  return -1
 	}
-
 }
