@@ -37,16 +37,17 @@ fileInput.addEventListener('change', (event) => {
 
 const start = () => {
 	let n = 0
-	for (let part of book.all_sentences) {
-		n += 1
-		new SocketEdgeTTS(
-			book.file_name + " " + n.toString().padStart(4, '0'),
-			"Microsoft Server Speech Text to Speech Voice (" + voice.value + ")",
-			"+" + String(rate.value) + "%",
-			"+0%",
-			part
-		).start_works()		
-	}	
-	
-
+	let timerId = setTimeout(function tick() {
+		if ( n < book.all_sentences.length) {
+			new SocketEdgeTTS(
+				book.file_name + " " + (n+1).toString().padStart(4, '0'),
+				"Microsoft Server Speech Text to Speech Voice (" + voice.value + ")",
+				"+" + String(rate.value) + "%",
+				"+0%",
+				book.all_sentences[n]
+			).start_works()
+			n += 1
+			timerId = setTimeout(tick, 1000)
+		}
+	}, 10)
 }
