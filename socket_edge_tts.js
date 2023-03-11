@@ -6,10 +6,7 @@
 		this.my_volume = _volume
 		this.my_text = _text
 		this.my_uint8Array = new Uint8Array(0)
-		this.saved_mp3 = false
-		this.msg_count = 0
-		this.data_count = 0
-		this.msg_end = false
+		this.audios = []
 		this.socket		
 	}
 
@@ -49,80 +46,64 @@
 			)
 		)
 	}
-	
-	onSocketMessage(event) {
-		const data = event.data
+		
+	async onSocketMessage(event) {
+		const data = await event.data
 		if ( typeof data == "string" ) {
-			if (data.includes("Path:turn.end")) {
-				//console.log('Received data:', data )
-				this.msg_end = true
+			if (data.includes("Path:turn.end")) {				
+				//Обработка частей Blob с последующим сохранением в mp3
+				for (let _ind = 0; _ind < this.audios.length; _ind++) {
+					const reader_result = await this.audios[_ind].arrayBuffer()
+					const uint8_Array = await new Uint8Array(reader_result)
+					
+					// Ищем все позиции байтов, равных "\r\n"
+					const bytes = new TextEncoder().encode("Path:audio\r\n")
+					const separator = new Uint8Array(bytes)
+					//const separator = new Uint8Array([13, 10]) //[ 116, 117, 114, 110, 46, 101, 110, 100 ]
+					let startIndex = 0
+					let endIndex = this.findIndex(uint8_Array, separator)
+					const parts = []
+					if (endIndex !== -1) {
+						// Разрезаем Blob на части
+						const partBlob = this.audios[_ind].slice(startIndex, endIndex)
+						parts.push(partBlob)
+					
+						// Обновляем индексы начала и конца следующей части
+						startIndex = endIndex + separator.length
+						endIndex = this.findIndex(uint8_Array.subarray(startIndex), separator)
+						if (endIndex !== -1) {
+							endIndex += startIndex
+						}
+					}
+					if (startIndex < this.audios[_ind].size) {
+						// Добавляем последнюю часть
+						const partBlob = this.audios[_ind].slice(startIndex)
+						parts.push(partBlob)
+					}
+					
+					if (parts.length > 0 && parts[1] instanceof Blob) {
+						const buffer = await parts[1].arrayBuffer()
+						const uint8_Array2 = await new Uint8Array(buffer)
+						const combinedUint8Array = await new Uint8Array(this.my_uint8Array.length + uint8_Array2.length)
+						combinedUint8Array.set(this.my_uint8Array, 0)
+						combinedUint8Array.set(uint8_Array2, this.my_uint8Array.length)
+						this.my_uint8Array = await combinedUint8Array
+					}					
+				}
+				console.log(this.audios.length)
+				this.save_mp3()
 			}
 		}
 		
 		if (data instanceof Blob) {
-			this.msg_count += 1
-			this.work_blob(data, 0)
+			await this.audios.push(data)
 		}
 	}
 
 	onSocketClose() {
-		console.log(" closed...")//console.log(this.my_filename + " closed...")
-		if ( this.saved_mp3 == false ) {
-			//this.save_mp3()
-		}
+		console.log("Сlosed...")//console.log(this.my_filename + " closed...")
 	}
-
-	async onReaderLoad(self, reader, blobdata, tag) {
-		const arrayBuffer = await reader.result
-		const uint8_Array = await new Uint8Array(arrayBuffer)
-		
-		// Ищем все позиции байтов, равных "\r\n"
-		const bytes = new TextEncoder().encode("Path:audio\r\n")
-		const separator = new Uint8Array(bytes)
-		//const separator = new Uint8Array([13, 10]) //[ 116, 117, 114, 110, 46, 101, 110, 100 ]
-		let startIndex = 0
-		let endIndex = self.findIndex(uint8_Array, separator)
-		const parts = []
-		if (endIndex !== -1) {
-			// Разрезаем Blob на части
-			const partBlob = blobdata.slice(startIndex, endIndex)
-			parts.push(partBlob)
-		
-			// Обновляем индексы начала и конца следующей части
-			startIndex = endIndex + separator.length
-			endIndex = self.findIndex(uint8_Array.subarray(startIndex), separator)
-			if (endIndex !== -1) {
-				endIndex += startIndex
-			}
-		}
-		if (startIndex < blobdata.size) {
-			// Добавляем последнюю часть
-			const partBlob = blobdata.slice(startIndex)
-			parts.push(partBlob)
-		}
-		
-		if (tag == 0) {
-			if (parts.length > 0 && parts[1] instanceof Blob) {
-				const buffer = await parts[1].arrayBuffer();
-				const uint8_Array2 = await new Uint8Array(buffer);				
-				const combinedUint8Array = await new Uint8Array(self.my_uint8Array.length + uint8_Array2.length);
-				combinedUint8Array.set(self.my_uint8Array, 0);
-				combinedUint8Array.set(uint8_Array2, self.my_uint8Array.length);
-				self.my_uint8Array = await combinedUint8Array;
-				self.data_count += 1
-				if (self.saved_mp3 == false && self.msg_end == true && self.data_count >= self.msg_count) {
-					self.save_mp3()
-				}
-				
-			} else {
-				self.data_count += 1
-				if (self.saved_mp3 == false && self.msg_end == true && self.data_count >= self.msg_count) {
-					self.save_mp3()
-				}				
-			}
-		}
-	}
-
+	
 	start_works() {
 		console.log(" start works...")//console.log(this.my_filename + " start works...")
 		if ("WebSocket" in window) {
@@ -137,13 +118,6 @@
 		} else {
 			console.log("WebSocket NOT supported by your Browser!");
 		}
-	}
-		
-	work_blob(blobdata, tag) {
-		const self = this
-		const reader = new FileReader()
-		reader.onload = this.onReaderLoad.bind(null, self, reader, blobdata, tag)
-		reader.readAsArrayBuffer(blobdata);
 	}
 
 	mkssml() {
@@ -164,9 +138,8 @@
 	}
 	
 	save_mp3() {
-		console.log("save_mp3");
+		console.log("Save_mp3");
 		if ( this.my_uint8Array.length > 0 ) {
-			this.saved_mp3 = true
 			var blob_mp3 = new Blob([this.my_uint8Array.buffer]);
 			const url = window.URL.createObjectURL(blob_mp3);
 			const link = document.createElement('a');
