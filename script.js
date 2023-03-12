@@ -48,10 +48,10 @@ fileInput.addEventListener('change', (event) => {
 function get_audio(all_in_one) {
 	let n = 0
 	let parts_book = []
-	let threads_info = { count: max_threads.value }
+	let threads_info = { count: parseInt(max_threads.value) }
 	let timerId = setTimeout(function tick() {
-		if ( threads_info.count < max_threads.value ) {
-			threads_info.count = max_threads.value
+		if ( threads_info.count < parseInt(max_threads.value) ) {
+			threads_info.count = parseInt(max_threads.value)
 		}
 		if ( n < threads_info.count && n < book.all_sentences.length) {
 			parts_book.push(
