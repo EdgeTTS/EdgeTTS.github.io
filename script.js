@@ -1,5 +1,7 @@
 ﻿const text = document.querySelector('.text')
 const rate = document.querySelector('.rate')
+const max_threads = document.querySelector('.max-threads')
+const max_threads_int = document.querySelector('#max-threads-int')
 const voice = document.querySelector('.voices')
 const saveButton = document.querySelector('.save')
 const save_alloneButton = document.querySelector('.save_allone')
@@ -10,6 +12,7 @@ const statArea = document.getElementById('stat-area');
 saveButton.addEventListener('click', e => start())
 save_alloneButton.addEventListener('click', e => start_allone())
 rate.addEventListener('change', e => rate.textContent = rate.value)
+max_threads.addEventListener('change', e => max_threads_int.textContent = max_threads.value)
 
 const FIRST_STRINGS_SIZE = 800
 const LAST_STRINGS_SIZE = 4200
@@ -45,8 +48,12 @@ fileInput.addEventListener('change', (event) => {
 function get_audio(all_in_one) {
 	let n = 0
 	let parts_book = []
+	let threads_info = { count: max_threads.value }
 	let timerId = setTimeout(function tick() {
-		if ( n < book.all_sentences.length) {
+		if ( threads_info.count < max_threads.value ) {
+			threads_info.count = max_threads.value
+		}
+		if ( n < threads_info.count && n < book.all_sentences.length) {
 			parts_book.push(
 				new SocketEdgeTTS(
 					n,
@@ -56,11 +63,15 @@ function get_audio(all_in_one) {
 					"+0%",
 					book.all_sentences[n],
 					statArea,
+					threads_info,
 					all_in_one
 				)
 			)
 			n += 1
 			timerId = setTimeout(tick, 100)
+		} else
+		if ( n >= threads_info.count ) {
+			timerId = setTimeout(tick, 5000)
 		}
 	}, 10)
 	
@@ -93,7 +104,7 @@ function get_audio(all_in_one) {
 					link.click()
 					document.body.removeChild(link)
 					window.URL.revokeObjectURL(url)
-					statArea.value += "\nСохранено в один файл\n"
+					//statArea.value += "\nСохранено в один файл\n"
 				} else {
 					timerSave = setTimeout(tick, 10000)
 				}

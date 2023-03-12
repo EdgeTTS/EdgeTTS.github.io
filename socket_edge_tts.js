@@ -1,19 +1,27 @@
 ﻿class SocketEdgeTTS {
-	constructor(_indexpart, _filename, _voice, _rate, _volume, _text, _statArea, _save_to_var) {
+	constructor(_indexpart, _filename,
+				_voice, _rate, _volume, _text,
+				_statArea, _obj_threads_info, _save_to_var) {
 		this.bytes_data_separator = new TextEncoder().encode("Path:audio\r\n")
 		this.data_separator = new Uint8Array(this.bytes_data_separator)
+		
+		this.my_uint8Array = new Uint8Array(0)
+		this.audios = []
+		
 		this.indexpart = _indexpart
 		this.my_filename = _filename
 		this.my_voice = _voice
 		this.my_rate = _rate
 		this.my_volume = _volume
 		this.my_text = _text
-		this.my_uint8Array = new Uint8Array(0)
-		this.audios = []
 		this.socket
 		this.statArea = _statArea
 		this.mp3_saved = false
 		this.save_to_var = _save_to_var
+		this.obj_threads_info = _obj_threads_info
+		this.end_message_received = false
+		
+		//Start
 		this.start_works()
 	}
 
@@ -59,7 +67,8 @@
 	async onSocketMessage(event) {
 		const data = await event.data
 		if ( typeof data == "string" ) {
-			if (data.includes("Path:turn.end")) {				
+			if (data.includes("Path:turn.end")) {
+				this.end_message_received = true
 				//Обработка частей Blob с последующим сохранением в mp3
 				for (let _ind = 0; _ind < this.audios.length; _ind++) {
 					const reader_result = await this.audios[_ind].arrayBuffer()
@@ -102,7 +111,17 @@
 
 	onSocketClose() {
 		if ( !this.mp3_saved ) {
-			this.update_stat("            Закрыта")
+			if ( this.end_message_received ) {
+				this.update_stat("            Закрыта")
+			} else {
+				this.update_stat("Ошибка - ПЕЕЗАПУСК")
+				let self = this
+				let timerId = setTimeout(function tick() {
+					self.my_uint8Array = new Uint8Array(0)
+					self.audios = []
+					self.start_works()
+				}, 10000)				
+			}
 		} else {
 			//this.update_stat("Сохранена и Закрыта")
 		}
@@ -156,7 +175,8 @@
 				document.body.removeChild(link);
 				window.URL.revokeObjectURL(url);
 			}
-			this.update_stat("Сохранена")				
+			this.update_stat("Сохранена")
+			this.obj_threads_info.count += 1
 		} else {
 			console.log("Bad Save_mp3");
 		}

@@ -42,6 +42,11 @@ input {
     width: 100%;
 }
 
+myspace {
+	display: none;
+	width: 100%;
+}
+
 button {
     background-color: #333;
     border: 1px solid #444;
@@ -51,6 +56,10 @@ button {
     line-height: inherit;
     padding: .5rem;
     cursor: pointer;
+}
+
+#savebutton {
+	width: 100%;
 }
 
 @media screen and (max-width: 1000px) {

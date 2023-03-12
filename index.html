@@ -323,7 +323,7 @@
     <br>
     <div class="slidecontainer">
       <label for="rate">Скорость</label>
-      <input type="range" min="0" max="100" value="100" step="10" class="rate" id="rate" list="ratemarks">
+      <input type="range" min="0" max="150" value="100" step="10" class="rate" id="rate" list="ratemarks">
       <datalist id="ratemarks">
         <option value="0"></option>
         <option value="10"></option>
@@ -336,15 +336,27 @@
         <option value="80"></option>
         <option value="90"></option>
         <option value="100"></option>
+        <option value="110"></option>
+        <option value="120"></option>
+        <option value="130"></option>
+        <option value="140"></option>
+        <option value="150"></option>
       </datalist>
+    </div>
+    <br>
+    <div class="slidecontainer">
+      <label for="max-threads">Количество потоков <output id="max-threads-int">20</output></label>
+      <input type="range" min=1 max=30 value=20 step=1 class="max-threads" id="max-threads">
     </div>
     <br>
 	<label for="file-input" id="file-label">Открыть</label>
     <input type="file" id="file-input">
+    <myspace class="myspace">
+	<br>
+    <button class="save" id="savebutton">Сохранить по частям</button>
+	</myspace>
     <br>
-    <button class="save">Сохранить</button>
-    <br>
-    <button class="save_allone">Сохранить в один файл</button>
+    <button class="save_allone">Сохранить</button>
     <br>
 	<textarea readonly class="text" id="stat-area"></textarea>
   </section>
