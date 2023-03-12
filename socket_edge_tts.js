@@ -1,5 +1,8 @@
 ﻿class SocketEdgeTTS {
-	constructor(_filename, _voice, _rate, _volume, _text) {
+	constructor(_indexpart, _filename, _voice, _rate, _volume, _text, _statArea, _save_to_var) {
+		this.bytes_data_separator = new TextEncoder().encode("Path:audio\r\n")
+		this.data_separator = new Uint8Array(this.bytes_data_separator)
+		this.indexpart = _indexpart
 		this.my_filename = _filename
 		this.my_voice = _voice
 		this.my_rate = _rate
@@ -7,7 +10,11 @@
 		this.my_text = _text
 		this.my_uint8Array = new Uint8Array(0)
 		this.audios = []
-		this.socket		
+		this.socket
+		this.statArea = _statArea
+		this.mp3_saved = false
+		this.save_to_var = _save_to_var
+		this.start_works()
 	}
 
 	date_to_string() {
@@ -27,6 +34,8 @@
 	}	
 
 	onSocketOpen(event) {
+		this.update_stat("Запущена")
+		
 		var my_data = this.date_to_string()
 		this.socket.send(
 			"X-Timestamp:" + my_data + "\r\n" +
@@ -57,32 +66,17 @@
 					const uint8_Array = await new Uint8Array(reader_result)
 					
 					// Ищем все позиции байтов, равных "\r\n"
-					const bytes = new TextEncoder().encode("Path:audio\r\n")
-					const separator = new Uint8Array(bytes)
-					//const separator = new Uint8Array([13, 10]) //[ 116, 117, 114, 110, 46, 101, 110, 100 ]
-					let startIndex = 0
-					let endIndex = this.findIndex(uint8_Array, separator)
+					let posIndex = this.findIndex(uint8_Array, this.data_separator)
 					const parts = []
-					if (endIndex !== -1) {
+					if (posIndex !== -1) {
 						// Разрезаем Blob на части
-						const partBlob = this.audios[_ind].slice(startIndex, endIndex)
+						const partBlob = this.audios[_ind].slice(posIndex + this.data_separator.length)
 						parts.push(partBlob)
-					
-						// Обновляем индексы начала и конца следующей части
-						startIndex = endIndex + separator.length
-						endIndex = this.findIndex(uint8_Array.subarray(startIndex), separator)
-						if (endIndex !== -1) {
-							endIndex += startIndex
-						}
-					}
-					if (startIndex < this.audios[_ind].size) {
-						// Добавляем последнюю часть
-						const partBlob = this.audios[_ind].slice(startIndex)
-						parts.push(partBlob)
+
 					}
 					
-					if (parts.length > 0 && parts[1] instanceof Blob) {
-						const buffer = await parts[1].arrayBuffer()
+					if (parts.length > 0 && parts[0] instanceof Blob) {
+						const buffer = await parts[0].arrayBuffer()
 						const uint8_Array2 = await new Uint8Array(buffer)
 						const combinedUint8Array = await new Uint8Array(this.my_uint8Array.length + uint8_Array2.length)
 						combinedUint8Array.set(this.my_uint8Array, 0)
@@ -90,7 +84,7 @@
 						this.my_uint8Array = await combinedUint8Array
 					}					
 				}
-				console.log(this.audios.length)
+				//console.log(this.audios.length)
 				this.save_mp3()
 			}
 		}
@@ -99,13 +93,23 @@
 			await this.audios.push(data)
 		}
 	}
+	
+	update_stat(msg) {
+		let statlines = this.statArea.value.split('\n');
+		statlines[this.indexpart]= "Часть " + (this.indexpart+1).toString().padStart(4, '0') + ": " + msg
+		this.statArea.value = statlines.join('\n')
+	}
 
 	onSocketClose() {
-		console.log("Сlosed...")//console.log(this.my_filename + " closed...")
+		if ( !this.mp3_saved ) {
+			this.update_stat("            Закрыта")
+		} else {
+			//this.update_stat("Сохранена и Закрыта")
+		}
 	}
 	
 	start_works() {
-		console.log(" start works...")//console.log(this.my_filename + " start works...")
+		//console.log("Start works...")//console.log(this.my_filename + " start works...")
 		if ("WebSocket" in window) {
 			this.socket = new WebSocket(
 				"wss://speech.platform.bing.com/consumer/speech/synthesize/" +
@@ -138,17 +142,23 @@
 	}
 	
 	save_mp3() {
-		console.log("Save_mp3");
+		//console.log("Save_mp3");
 		if ( this.my_uint8Array.length > 0 ) {
-			var blob_mp3 = new Blob([this.my_uint8Array.buffer]);
-			const url = window.URL.createObjectURL(blob_mp3);
-			const link = document.createElement('a');
-			link.href = url;
-			link.download = this.my_filename + '.mp3';
-			document.body.appendChild(link);
-			link.click();
-			document.body.removeChild(link);
-			window.URL.revokeObjectURL(url);				
+			this.mp3_saved = true
+			if ( !this.save_to_var ) {				
+				var blob_mp3 = new Blob([this.my_uint8Array.buffer]);
+				const url = window.URL.createObjectURL(blob_mp3);
+				const link = document.createElement('a');
+				link.href = url;
+				link.download = this.my_filename + '.mp3';
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+				window.URL.revokeObjectURL(url);
+			}
+			this.update_stat("Сохранена")				
+		} else {
+			console.log("Bad Save_mp3");
 		}
 	}
 

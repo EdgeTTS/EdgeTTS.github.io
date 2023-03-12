@@ -10,17 +10,11 @@
 
 	getFixPoints(text) {
 	  const result = [];
-	  const pointsList = text.split('\n').filter(Boolean);
-	  
-	  for (let points of pointsList) {
-		if ([". ", ", ", "! ", "? ", ": ", "; ", "- "].includes(points.slice(-2))) {
-		  result.push(points);
-		} else {
-		  result.push(points + ".");
-		}
-	  }
-	  
-	  return result;
+	  let fix_text = text.replace(/[~\|\^]/g, "-");
+	  fix_text = fix_text.replace(/\\/g, "/");
+	  fix_text = fix_text.replace(/([^\.\,\!\?\:\;\-])\r\n/g, (match, p1) => p1 + ".\r\n")
+	  const pointsList = fix_text.split('\n').filter(Boolean);
+	  return pointsList;
 	}
 
 	get_fix_section(sentences) {

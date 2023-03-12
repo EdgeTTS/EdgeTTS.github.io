@@ -14,19 +14,6 @@ body {
     color: #fff;
 }
 
-textarea {
-    background-color: #333;
-    border: 1px solid #444;
-    font-family: inherit;
-    font-size: inherit;
-    line-height: inherit;
-    padding: 1rem;
-    resize: vertical;
-    min-height: 75vh;
-    color: #fff;
-    flex-grow: 1;
-}
-
 .options {
     display: flex;
     flex-direction: column;
@@ -92,4 +79,71 @@ button {
     padding: .5rem;
     cursor: pointer;
 	text-align: center;
+}
+
+#text-area {
+    background-color: #333;
+    border: 1px solid #444;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    padding: 1rem;
+    resize: vertical;
+    min-height: 75vh;
+    color: #fff;
+    flex-grow: 1;
+}
+
+#stat-area {
+    background-color: #222;
+    border: 0 solid #222;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: inherit;
+    padding: 1rem;
+    resize: vertical;
+    min-height: 20vh;
+    color: #999;
+    flex-grow: 1;
+    border: none;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  background-color: #222;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: #333;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background-color: #222;
+}
+
+#text-area::-webkit-scrollbar {
+  width: 10px;
+  background-color: #333;
+}
+
+#text-area::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: #222;
+}
+
+#text-area::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background-color: #333;
+}
+
+::-webkit-resizer {
+  display: none;
+  background-color: #222;
+}
+
+#text-area::-webkit-resizer {
+  display: none;
+  background-color: #333;
 }
