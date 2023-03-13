@@ -41,7 +41,7 @@ function get_text(_filename, _text, is_file) {
 
 fileInput.addEventListener('change', (event) => {
 	book_loaded = false
-	textArea.value = ""
+	//textArea.value = ""
 	statArea.value = ""
 	const file = event.target.files[0]
 	const reader = new FileReader()
