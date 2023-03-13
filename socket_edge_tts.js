@@ -25,6 +25,16 @@
 		this.start_works()
 	}
 
+	clear() {
+		//this.socket = null;				
+		this.my_uint8Array = null
+		this.my_uint8Array = new Uint8Array(0)
+		for (let part of this.audios) {
+			part = null
+		}
+		this.audios = []
+	}
+
 	date_to_string() {
 		const date = new Date()
 		const options = {
@@ -174,6 +184,8 @@
 				link.click();
 				document.body.removeChild(link);
 				window.URL.revokeObjectURL(url);
+				
+				this.clear()
 			}
 			this.update_stat("Сохранена")
 			this.obj_threads_info.count += 1

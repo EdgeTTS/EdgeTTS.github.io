@@ -105,6 +105,10 @@ function get_audio(all_in_one) {
 					document.body.removeChild(link)
 					window.URL.revokeObjectURL(url)
 					//statArea.value += "\nСохранено в один файл\n"
+					for (let part_mp3 of parts_book) {
+						part_mp3.clear()
+					}
+					
 				} else {
 					timerSave = setTimeout(tick, 10000)
 				}

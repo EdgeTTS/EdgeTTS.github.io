@@ -28,7 +28,7 @@
 		  let word = words[j];
 		  if (current_text.length + word.length > this.LAST_STRINGS_LENGTH && [".", ",", "!", "?", ":", ";", "-"].includes(word[word.length - 1])) {
 			result.push(current_text + word);
-			current_text = "";
+			current_text = " ";
 		  } else {
 			if (current_text.length > 0) {
 			  current_text += " ";
