@@ -17,8 +17,9 @@ body {
 .options {
     display: flex;
     flex-direction: column;
-    margin-left: 2rem;
     max-width: 20rem;
+    margin-left: 1rem;
+    margin-right: 1rem;
 }
 
 select {
@@ -91,7 +92,6 @@ button {
 }
 
 #file-label {
-	
     background-color: #333;
     border: 1px solid #444;
     color: #fff;
@@ -111,15 +111,17 @@ button {
     line-height: inherit;
     padding: 1rem;
     resize: vertical;
-    min-height: 75vh;
+    min-height: 55vh;
     color: #fff;
+    margin-left: 1rem;
+    margin-right: 1rem;
     flex-grow: 1;
 }
 
 #stat-area {
     background-color: #222;
     border: 0 solid #222;
-    font-family: inherit;
+	font-family: monospace;
     font-size: 1rem;
     line-height: inherit;
     padding: 1rem;
@@ -128,6 +130,8 @@ button {
     color: #999;
     flex-grow: 1;
     border: none;
+	outline: none;
+    cursor: default;
 }
 
 ::-webkit-scrollbar {

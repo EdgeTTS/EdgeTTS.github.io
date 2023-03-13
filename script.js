@@ -17,35 +17,49 @@ max_threads.addEventListener('change', e => max_threads_int.textContent = max_th
 const FIRST_STRINGS_SIZE = 800
 const LAST_STRINGS_SIZE = 4200
 var book
+var book_loaded = false
 
-fileInput.addEventListener('change', (event) => {
-	const file = event.target.files[0]
-	const reader = new FileReader()
-	textArea.value = ""
+function get_text(_filename, _text, is_file) {
 	statArea.value = ""
 	
-	reader.onload = () => {
-		book = new ProcessingFile(
-			file.name.slice(0, file.name.lastIndexOf(".")),
-			reader.result,
-			FIRST_STRINGS_SIZE,
-			LAST_STRINGS_SIZE
-		)	
-		
-		n = 0
-		for (let part of book.all_sentences) {
-			n += 1
-			//console.log(part)
-			textArea.value += "Часть " + n + ":\n" + part + "\n\n"
-			statArea.value += "Часть " + (n).toString().padStart(4, '0') + ": Открыта\n"
+	book = new ProcessingFile(
+		_filename,
+		_text,
+		FIRST_STRINGS_SIZE,
+		LAST_STRINGS_SIZE
+	)	
+	
+	let tmp_ind = 0
+	for (let part of book.all_sentences) {
+		tmp_ind += 1
+		if ( is_file == true ) {
+			textArea.value += "Часть " + tmp_ind + ":\n" + part + "\n\n"
 		}
+		statArea.value += "Часть " + (tmp_ind).toString().padStart(4, '0') + ": Открыта\n"
+	}
+}
+
+fileInput.addEventListener('change', (event) => {
+	book_loaded = false
+	textArea.value = ""
+	statArea.value = ""
+	const file = event.target.files[0]
+	const reader = new FileReader()
+	
+	reader.onload = () => {
+		book_loaded = true
+		get_text(file.name.slice(0, file.name.lastIndexOf(".")), reader.result, true)
 	}
 
 	reader.readAsText(file)
 })
 
 
+
 function get_audio(all_in_one) {
+	if ( !book_loaded )  {
+		get_text("Text", textArea.value, false)
+	}
 	let n = 0
 	let parts_book = []
 	let threads_info = { count: parseInt(max_threads.value) }

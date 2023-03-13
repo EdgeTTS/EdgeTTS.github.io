@@ -26,7 +26,8 @@
 	}
 
 	clear() {
-		//this.socket = null;				
+		//this.socket = null;	
+		this.end_message_received = false		
 		this.my_uint8Array = null
 		this.my_uint8Array = new Uint8Array(0)
 		for (let part of this.audios) {
@@ -52,6 +53,7 @@
 	}	
 
 	onSocketOpen(event) {
+		this.end_message_received = false
 		this.update_stat("Запущена")
 		
 		var my_data = this.date_to_string()
@@ -79,6 +81,7 @@
 		if ( typeof data == "string" ) {
 			if (data.includes("Path:turn.end")) {
 				this.end_message_received = true
+				//console.log("Path:turn.end ", this.indexpart)
 				//Обработка частей Blob с последующим сохранением в mp3
 				for (let _ind = 0; _ind < this.audios.length; _ind++) {
 					const reader_result = await this.audios[_ind].arrayBuffer()
@@ -121,8 +124,8 @@
 
 	onSocketClose() {
 		if ( !this.mp3_saved ) {
-			if ( this.end_message_received ) {
-				this.update_stat("            Закрыта")
+			if ( this.end_message_received == true ) {
+				this.update_stat("         Обработка")
 			} else {
 				this.update_stat("Ошибка - ПЕЕЗАПУСК")
 				let self = this
