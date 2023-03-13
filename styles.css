@@ -43,7 +43,7 @@ input {
 }
 
 myspace {
-	display: none;
+	display: block;
 	width: 100%;
 }
 
@@ -59,7 +59,20 @@ button {
 }
 
 #savebutton {
-	width: 100%;
+	width: 48%;
+	display: inline-block;
+}
+
+#saveallbutton {
+	width: 48%;
+	float: right;
+	display: inline-block;
+}
+
+#save-label {
+	text-align: center;
+    padding-bottom: .9rem;
+	float: right;
 }
 
 @media screen and (max-width: 1000px) {
@@ -111,7 +124,7 @@ button {
     line-height: inherit;
     padding: 1rem;
     resize: vertical;
-    min-height: 20vh;
+    min-height: 18vh;
     color: #999;
     flex-grow: 1;
     border: none;
