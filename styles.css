@@ -139,7 +139,7 @@ button {
     background-color: #222;
     border: 0 solid #222;
 	font-family: monospace;
-    font-size: 1rem;
+    font-size: .9rem;
     line-height: inherit;
     padding: 1rem;
     resize: vertical;
