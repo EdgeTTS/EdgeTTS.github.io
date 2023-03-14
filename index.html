@@ -10,7 +10,6 @@
 </head>
 
 <body>
-
   <textarea class="text" id="text-area" placeholder="Текст..."></textarea>
   <br>
   <section class="options">
@@ -348,14 +347,24 @@
       <label for="max-threads">Количество потоков <output id="max-threads-int">20</output></label>
       <input type="range" min=1 max=30 value=20 step=1 class="max-threads" id="max-threads">
     </div>
-    <br>
-	<label for="file-input" id="file-label">Открыть</label>
-    <input type="file" id="file-input">
+    
+
+	<br>
+    <myspace class="myspace">
+		<label id="left-label"><a href="./RU.lexx" id="is-lexx">Словарь</a></label>
+		<label id="right-label">Книга</label>
+		<button id="file-button-lex">Загрузить</button>
+		<button id="file-button">Открыть</button>
+	</myspace>
+    <input type="file" id="file-input-lex" accept=".lexx">
+    <input type="file" id="file-input" accept=".txt">
+	
+	
 	<br>
     <label id="save-label">Сохранить</label>
     <myspace class="myspace">
-    <button class="save" id="savebutton">По частям</button>
-    <button class="save_allone" id="saveallbutton">В один файл</button>
+		<button class="save" id="savebutton">По частям</button>
+		<button class="save_allone" id="saveallbutton">В один файл</button>
 	</myspace>
     <br>
     <br>

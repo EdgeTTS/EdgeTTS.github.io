@@ -5,9 +5,13 @@ const max_threads_int = document.querySelector('#max-threads-int')
 const voice = document.querySelector('.voices')
 const saveButton = document.querySelector('.save')
 const save_alloneButton = document.querySelector('.save_allone')
-const fileInput = document.getElementById('file-input');
-const textArea = document.getElementById('text-area');
-const statArea = document.getElementById('stat-area');
+const textArea = document.getElementById('text-area')
+const statArea = document.getElementById('stat-area')
+
+const fileInputLex = document.getElementById('file-input-lex')
+const fileInput = document.getElementById('file-input')
+const fileButtonLex = document.getElementById('file-button-lex')
+const fileButton = document.getElementById('file-button')
 
 saveButton.addEventListener('click', e => start())
 save_alloneButton.addEventListener('click', e => start_allone())
@@ -16,8 +20,73 @@ max_threads.addEventListener('change', e => max_threads_int.textContent = max_th
 
 const FIRST_STRINGS_SIZE = 800
 const LAST_STRINGS_SIZE = 4200
+var lexx = []
 var book
 var book_loaded = false
+
+//document.addEventListener("DOMContentLoaded", function(event) {
+	//load_lex();
+//});
+
+fileButtonLex.addEventListener('click', () => {
+	fileInputLex.click();
+})
+
+fileButton.addEventListener('click', () => {
+	fileInput.click();
+})
+
+
+function isRegExp(str) {
+  try {
+    new RegExp(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+
+fileInputLex.addEventListener('change', (event) => {
+	lexx = []
+	const file = event.target.files[0]
+	
+	if (file) {
+		const reader = new FileReader()
+		
+		reader.onload = () => {
+			lexx = reader.result.split("\n")
+		}
+		reader.readAsText(file)
+		fileButtonLex.textContent = "Загружен"
+	} else {
+		fileButtonLex.textContent = "Загрузить"
+	}
+})
+
+fileInput.addEventListener('change', (event) => {
+	book_loaded = false
+	statArea.value = ""
+	const file = event.target.files[0]
+	
+	if (file) {
+		fileButton.textContent = "Обработка..."
+		textArea.value = ""
+		const reader = new FileReader()
+		reader.onload = () => {
+			book_loaded = true
+			fileButton.textContent = "Открыта"
+			get_text(file.name.slice(0, file.name.lastIndexOf(".")), reader.result, true)
+		}
+		
+		reader.readAsText(file)
+	} else {
+		fileButton.textContent = "Открыть"
+	}
+	
+
+})
+
 
 function get_text(_filename, _text, is_file) {
 	statArea.value = ""
@@ -26,7 +95,8 @@ function get_text(_filename, _text, is_file) {
 		_filename,
 		_text,
 		FIRST_STRINGS_SIZE,
-		LAST_STRINGS_SIZE
+		LAST_STRINGS_SIZE,
+		lexx
 	)	
 	
 	let tmp_ind = 0
@@ -38,23 +108,6 @@ function get_text(_filename, _text, is_file) {
 		statArea.value += "Часть " + (tmp_ind).toString().padStart(4, '0') + ": Открыта\n"
 	}
 }
-
-fileInput.addEventListener('change', (event) => {
-	book_loaded = false
-	//textArea.value = ""
-	statArea.value = ""
-	const file = event.target.files[0]
-	const reader = new FileReader()
-	
-	reader.onload = () => {
-		book_loaded = true
-		get_text(file.name.slice(0, file.name.lastIndexOf(".")), reader.result, true)
-	}
-
-	reader.readAsText(file)
-})
-
-
 
 function get_audio(all_in_one) {
 	if ( !book_loaded )  {
