@@ -1,5 +1,8 @@
 ﻿const text = document.querySelector('.text')
+const pitch = document.querySelector('.pitch')
+const pitch_str = document.querySelector('#pitch-str')
 const rate = document.querySelector('.rate')
+const rate_str = document.querySelector('#rate-str')
 const max_threads = document.querySelector('.max-threads')
 const max_threads_int = document.querySelector('#max-threads-int')
 const voice = document.querySelector('.voices')
@@ -7,6 +10,7 @@ const saveButton = document.querySelector('.save')
 const save_alloneButton = document.querySelector('.save_allone')
 const textArea = document.getElementById('text-area')
 const statArea = document.getElementById('stat-area')
+const stat_str = document.querySelector('#stat-str')
 
 const fileInputLex = document.getElementById('file-input-lex')
 const fileInput = document.getElementById('file-input')
@@ -15,7 +19,8 @@ const fileButton = document.getElementById('file-button')
 
 saveButton.addEventListener('click', e => start())
 save_alloneButton.addEventListener('click', e => start_allone())
-rate.addEventListener('change', e => rate.textContent = rate.value)
+rate.addEventListener('change', e => rate_str.textContent = rate.value >= 0 ? `+${rate.value}%` : `${rate.value}%`)
+pitch.addEventListener('change', e => pitch_str.textContent = pitch.value >= 0 ? `+${pitch.value}Hz` : `${pitch.value}Hz`)
 max_threads.addEventListener('change', e => max_threads_int.textContent = max_threads.value)
 
 const FIRST_STRINGS_SIZE = 800
@@ -35,17 +40,6 @@ fileButtonLex.addEventListener('click', () => {
 fileButton.addEventListener('click', () => {
 	fileInput.click();
 })
-
-
-function isRegExp(str) {
-  try {
-    new RegExp(str);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
 
 fileInputLex.addEventListener('change', (event) => {
 	lexx = []
@@ -68,6 +62,7 @@ fileInput.addEventListener('change', (event) => {
 	book_loaded = false
 	statArea.value = ""
 	const file = event.target.files[0]
+	stat_str.textContent = "0 / 0"
 	
 	if (file) {
 		fileButton.textContent = "Обработка..."
@@ -107,6 +102,7 @@ function get_text(_filename, _text, is_file) {
 		}
 		statArea.value += "Часть " + (tmp_ind).toString().padStart(4, '0') + ": Открыта\n"
 	}
+	stat_str.textContent = `0 / ${book.all_sentences.length}`
 }
 
 function get_audio(all_in_one) {
@@ -115,7 +111,7 @@ function get_audio(all_in_one) {
 	}
 	let n = 0
 	let parts_book = []
-	let threads_info = { count: parseInt(max_threads.value) }
+	let threads_info = { count: parseInt(max_threads.value), stat: stat_str }
 	let timerId = setTimeout(function tick() {
 		if ( threads_info.count < parseInt(max_threads.value) ) {
 			threads_info.count = parseInt(max_threads.value)
@@ -126,6 +122,7 @@ function get_audio(all_in_one) {
 					n,
 					book.file_name + " " + (n+1).toString().padStart(4, '0'),
 					"Microsoft Server Speech Text to Speech Voice (" + voice.value + ")",
+					String(pitch_str.textContent),
 					"+" + String(rate.value) + "%",
 					"+0%",
 					book.all_sentences[n],

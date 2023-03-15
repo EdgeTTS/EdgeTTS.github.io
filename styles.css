@@ -14,6 +14,10 @@ body {
     color: #fff;
 }
 
+label {
+    color: #bbb;
+}
+
 .options {
     display: flex;
     flex-direction: column;
@@ -143,7 +147,7 @@ button {
     line-height: inherit;
     padding: 1rem;
     resize: vertical;
-    min-height: 18vh;
+    min-height: 38vh;
     color: #999;
     flex-grow: 1;
     border: none;

@@ -321,30 +321,17 @@
 
     <br>
     <div class="slidecontainer">
-      <label for="rate">Скорость</label>
-      <input type="range" min="0" max="150" value="100" step="10" class="rate" id="rate" list="ratemarks">
-      <datalist id="ratemarks">
-        <option value="0"></option>
-        <option value="10"></option>
-        <option value="20"></option>
-        <option value="30"></option>
-        <option value="40"></option>
-        <option value="50"></option>
-        <option value="60"></option>
-        <option value="70"></option>
-        <option value="80"></option>
-        <option value="90"></option>
-        <option value="100"></option>
-        <option value="110"></option>
-        <option value="120"></option>
-        <option value="130"></option>
-        <option value="140"></option>
-        <option value="150"></option>
-      </datalist>
+      <label for="rate">Скорость <output style="float: right;" id="rate-str">+100%</output></label>
+      <input type="range" min="0" max="150" value="100" step="5" class="rate" id="rate" list="ratemarks">
     </div>
     <br>
     <div class="slidecontainer">
-      <label for="max-threads">Количество потоков <output id="max-threads-int">20</output></label>
+      <label for="pitch">Тональность <output style="float: right;" id="pitch-str">+0Hz</output></label>
+      <input type="range" min="-50" max="50" value="0" step="0" class="pitch" id="pitch">
+    </div>
+    <br>
+    <div class="slidecontainer">
+      <label for="max-threads">Количество потоков <output style="float: right;" id="max-threads-int">20</output></label>
       <input type="range" min=1 max=30 value=20 step=1 class="max-threads" id="max-threads">
     </div>
     
@@ -368,6 +355,8 @@
 	</myspace>
     <br>
 	<textarea readonly class="text" id="stat-area"></textarea>
+	<br>
+    <label id="stat-label">Готово <output style="float: right;" id="stat-str">0 / 0</output></label>
   </section>
   <script src="./processing_file.js"></script>
   <script src="./socket_edge_tts.js"></script>

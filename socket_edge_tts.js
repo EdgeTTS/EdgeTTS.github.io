@@ -1,6 +1,6 @@
 ﻿class SocketEdgeTTS {
 	constructor(_indexpart, _filename,
-				_voice, _rate, _volume, _text,
+				_voice, _pitch, _rate, _volume, _text,
 				_statArea, _obj_threads_info, _save_to_var) {
 		this.bytes_data_separator = new TextEncoder().encode("Path:audio\r\n")
 		this.data_separator = new Uint8Array(this.bytes_data_separator)
@@ -11,6 +11,7 @@
 		this.indexpart = _indexpart
 		this.my_filename = _filename
 		this.my_voice = _voice
+		this.my_pitch = _pitch
 		this.my_rate = _rate
 		this.my_volume = _volume
 		this.my_text = _text
@@ -104,7 +105,7 @@
 						combinedUint8Array.set(this.my_uint8Array, 0)
 						combinedUint8Array.set(uint8_Array2, this.my_uint8Array.length)
 						this.my_uint8Array = await combinedUint8Array
-					}					
+					}
 				}
 				//console.log(this.audios.length)
 				this.save_mp3()
@@ -159,7 +160,7 @@
 	mkssml() {
 		return (
 			"<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>\n" +
-			"<voice name='" + this.my_voice + "'><prosody pitch='+0Hz' rate='" + this.my_rate + "' volume='" + this.my_volume + "'>\n" +
+			"<voice name='" + this.my_voice + "'><prosody pitch='" + this.my_pitch + "' rate='" + this.my_rate + "' volume='" + this.my_volume + "'>\n" +
 			this.my_text + "</prosody></voice></speak>"
 		)
 	}
@@ -192,6 +193,9 @@
 			}
 			this.update_stat("Сохранена")
 			this.obj_threads_info.count += 1
+			const stat_count = this.obj_threads_info.stat.textContent.split(' / ');
+			this.obj_threads_info.stat.textContent = String(Number(stat_count[0]) + 1) + " / " + stat_count[1]
+			
 		} else {
 			console.log("Bad Save_mp3");
 		}
