@@ -11,13 +11,13 @@
 
 	getFixPoints(text) {
 	  const result = [];
-	  let fix_text = text.replace(/[~\|\^]/g, "-");
+	  let fix_text = text.replace(/[~\|\*\^]/g, "-");
 	  fix_text = fix_text.replace(/\\/g, "/");
-	  if ( fix_text.includes("\r\n") == true ) {
-		fix_text = fix_text.replace(/([^\.\,\!\?\:\;\-])\r\n/g, (match, p1) => p1 + ".\r\n")
-	  } else {
-		fix_text = fix_text.replace(/([^\.\,\!\?\:\;\-])\n/g, (match, p1) => p1 + ".\n")
-	  }
+//	  if ( fix_text.includes("\r\n") == true ) {
+//		fix_text = fix_text.replace(/([^\.\,\!\?\:\;\-])\r\n/g, (match, p1) => p1 + ".\r\n")
+//	  } else {
+//		fix_text = fix_text.replace(/([^\.\,\!\?\:\;\-])\n/g, (match, p1) => p1 + ".\n")
+//	  }
 	  
 	  //Применение словаря
 	  if ( this.lang_lexx.length > 0 ) {
@@ -52,19 +52,20 @@
 
 	get_fix_section(sentences) {
 	  let result = [];
+	  let splitter = " ";
 	  let current_text = "";
 
 	  for (let i = 0; i < sentences.length; i++) {
 		let line = sentences[i];
-		let words = line.split(" ");
+		let words = line.split(splitter);
 		for (let j = 0; j < words.length; j++) {
 		  let word = words[j];
 		  if (current_text.length + word.length > this.LAST_STRINGS_LENGTH && [".", ",", "!", "?", ":", ";", "-"].includes(word[word.length - 1])) {
-			result.push(current_text + word);
-			current_text = " ";
+			result.push(current_text + splitter + word);
+			current_text = "";
 		  } else {
 			if (current_text.length > 0) {
-			  current_text += " ";
+			  current_text += splitter;
 			}
 			current_text += word;
 		  }
