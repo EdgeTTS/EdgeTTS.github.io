@@ -70,8 +70,17 @@ fileInput.addEventListener('change', (event) => {
 		const reader = new FileReader()
 		reader.onload = () => {
 			book_loaded = true
+			const file_name_toLowerCase = file.name.toLowerCase()
+			
+			if ( file_name_toLowerCase.endsWith('.txt') ) {
+				get_text(file.name.slice(0, file.name.lastIndexOf(".")), reader.result, true)	
+			} else if ( file_name_toLowerCase.endsWith('.fb2') ) {
+				get_text(file.name.slice(0, file.name.lastIndexOf(".")), convertFb2ToTxt(reader.result), true)	
+			//} else if ( file_name_toLowerCase.endsWith('.epub') ) {
+			//	get_text(file.name.slice(0, file.name.lastIndexOf(".")), convertEpubToTxt(reader.result), true)	
+			}
+			
 			fileButton.textContent = "Открыта"
-			get_text(file.name.slice(0, file.name.lastIndexOf(".")), reader.result, true)
 		}
 		
 		reader.readAsText(file)
