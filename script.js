@@ -104,9 +104,14 @@ function get_text(_filename, _text, is_file) {
 		textArea.value = ""
 	}	
 	
-	if (book) {
+	if (book && is_file) {
 		book.addNewText(_filename, _text)
 	} else {
+		if (book) {
+			book.clear()
+			book = null
+		}
+
 		book = new ProcessingFile(
 			_filename,
 			_text,
@@ -194,7 +199,7 @@ function get_audio(all_in_one) {
 					const url = window.URL.createObjectURL(blob_mp3)
 					const link = document.createElement('a')
 					link.href = url
-					link.download = book.file_name[0][0] + '.mp3'
+					link.download = book.file_names[0][0] + '.mp3'
 					document.body.appendChild(link)
 					link.click()
 					document.body.removeChild(link)
