@@ -61,47 +61,60 @@ fileInputLex.addEventListener('change', (event) => {
 fileInput.addEventListener('change', (event) => {
 	book_loaded = false
 	statArea.value = ""
-	const file = event.target.files[0]
-	stat_str.textContent = "0 / 0"
 	
-	if (file) {
-		fileButton.textContent = "Обработка..."
-		textArea.value = ""
-		const reader = new FileReader()
-		reader.onload = () => {
-			book_loaded = true
-			const file_name_toLowerCase = file.name.toLowerCase()
-			
-			if ( file_name_toLowerCase.endsWith('.txt') ) {
-				get_text(file.name.slice(0, file.name.lastIndexOf(".")), reader.result, true)	
-			} else if ( file_name_toLowerCase.endsWith('.fb2') ) {
-				get_text(file.name.slice(0, file.name.lastIndexOf(".")), convertFb2ToTxt(reader.result), true)	
-			//} else if ( file_name_toLowerCase.endsWith('.epub') ) {
-			//	get_text(file.name.slice(0, file.name.lastIndexOf(".")), convertEpubToTxt(reader.result), true)	
-			}
-			
-			fileButton.textContent = "Открыта"
-		}
-		
-		reader.readAsText(file)
-	} else {
-		fileButton.textContent = "Открыть"
+	if (book) {
+		book.clear()
+		book = null
 	}
 	
+	for (let file of event.target.files) {
+		stat_str.textContent = "0 / 0"
+		
+		if (file) {
+			fileButton.textContent = "Обработка..."
+			const reader = new FileReader()
+			reader.onload = () => {
+				book_loaded = true
+				const file_name_toLowerCase = file.name.toLowerCase()
+				
+				if ( file_name_toLowerCase.endsWith('.txt') ) {
+					get_text(file.name.slice(0, file.name.lastIndexOf(".")), reader.result, true)	
+				} else if ( file_name_toLowerCase.endsWith('.fb2') ) {
+					get_text(file.name.slice(0, file.name.lastIndexOf(".")), convertFb2ToTxt(reader.result), true)	
+				} else if ( file_name_toLowerCase.endsWith('.epub') ) {
+					convertEpubToTxt(file).then(result => get_text(file.name.slice(0, file.name.lastIndexOf(".")), result, true))
+				} else if ( file_name_toLowerCase.endsWith('.zip') ) {
+					convertZipToTxt(file)
+				}
+				fileButton.textContent = "Открыта"
+			}
+			
+			reader.readAsText(file)
+		} else {
+			fileButton.textContent = "Открыть"
+		}
+	}
 
 })
 
 
 function get_text(_filename, _text, is_file) {
 	statArea.value = ""
+	if ( is_file == true ) {
+		textArea.value = ""
+	}	
 	
-	book = new ProcessingFile(
-		_filename,
-		_text,
-		FIRST_STRINGS_SIZE,
-		LAST_STRINGS_SIZE,
-		lexx
-	)	
+	if (book) {
+		book.addNewText(_filename, _text)
+	} else {
+		book = new ProcessingFile(
+			_filename,
+			_text,
+			FIRST_STRINGS_SIZE,
+			LAST_STRINGS_SIZE,
+			lexx
+		)	
+	}
 	
 	let tmp_ind = 0
 	for (let part of book.all_sentences) {
@@ -119,6 +132,9 @@ function get_audio(all_in_one) {
 		get_text("Text", textArea.value, false)
 	}
 	let n = 0
+	let fix_n = 0
+	let file_name_ind = 0
+	let file_name = book.file_names[file_name_ind][0]
 	let parts_book = []
 	let threads_info = { count: parseInt(max_threads.value), stat: stat_str }
 	let timerId = setTimeout(function tick() {
@@ -126,10 +142,16 @@ function get_audio(all_in_one) {
 			threads_info.count = parseInt(max_threads.value)
 		}
 		if ( n < threads_info.count && n < book.all_sentences.length) {
+			if ( book.file_names[file_name_ind][1] > 0 && book.file_names[file_name_ind][1] <= n ) {
+				file_name_ind += 1
+				file_name = book.file_names[file_name_ind][0]
+				fix_n = n
+			}
+			
 			parts_book.push(
 				new SocketEdgeTTS(
 					n,
-					book.file_name + " " + (n+1).toString().padStart(4, '0'),
+					file_name + " " + (n+1-fix_n).toString().padStart(4, '0'),
 					"Microsoft Server Speech Text to Speech Voice (" + voice.value + ")",
 					String(pitch_str.textContent),
 					"+" + String(rate.value) + "%",
@@ -172,7 +194,7 @@ function get_audio(all_in_one) {
 					const url = window.URL.createObjectURL(blob_mp3)
 					const link = document.createElement('a')
 					link.href = url
-					link.download = book.file_name + '.mp3'
+					link.download = book.file_name[0][0] + '.mp3'
 					document.body.appendChild(link)
 					link.click()
 					document.body.removeChild(link)
