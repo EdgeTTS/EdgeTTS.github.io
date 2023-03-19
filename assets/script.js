@@ -5,11 +5,14 @@ const rate = document.querySelector('.rate')
 const rate_str = document.querySelector('#rate-str')
 const max_threads = document.querySelector('.max-threads')
 const max_threads_int = document.querySelector('#max-threads-int')
+const mergefiles = document.querySelector('.mergefiles')
+const mergefiles_str = document.querySelector('#mergefiles-str')
 const voice = document.querySelector('.voices')
 const saveButton = document.querySelector('.save')
-const save_alloneButton = document.querySelector('.save_allone')
+const settingsButton = document.querySelector('.settingsbutton')
 const textArea = document.getElementById('text-area')
 const statArea = document.getElementById('stat-area')
+const stat_info = document.querySelector('#stat-info')
 const stat_str = document.querySelector('#stat-str')
 
 const fileInputLex = document.getElementById('file-input-lex')
@@ -18,10 +21,12 @@ const fileButtonLex = document.getElementById('file-button-lex')
 const fileButton = document.getElementById('file-button')
 
 saveButton.addEventListener('click', e => start())
-save_alloneButton.addEventListener('click', e => start_allone())
+//save_alloneButton.addEventListener('click', e => start_allone())
+settingsButton.addEventListener('click', e => lite_mod())
 rate.addEventListener('change', e => rate_str.textContent = rate.value >= 0 ? `+${rate.value}%` : `${rate.value}%`)
 pitch.addEventListener('change', e => pitch_str.textContent = pitch.value >= 0 ? `+${pitch.value}Hz` : `${pitch.value}Hz`)
 max_threads.addEventListener('change', e => max_threads_int.textContent = max_threads.value)
+mergefiles.addEventListener('change', e => mergefiles_str.textContent = mergefiles.value == 30 ? "ВСЕ" : `${mergefiles.value} шт.`)
 
 const FIRST_STRINGS_SIZE = 800
 const LAST_STRINGS_SIZE = 4200
@@ -29,9 +34,9 @@ var lexx = []
 var book
 var book_loaded = false
 
-//document.addEventListener("DOMContentLoaded", function(event) {
-	//load_lex();
-//});
+document.addEventListener("DOMContentLoaded", function(event) {
+	lite_mod()
+});
 
 fileButtonLex.addEventListener('click', () => {
 	fileInputLex.click();
@@ -67,7 +72,13 @@ fileInput.addEventListener('change', (event) => {
 		book = null
 	}
 	
+	if (event.target.files.length == 0) {
+		fileButton.textContent = "Открыть"
+		stat_info.textContent = ""//"Открыто"
+	}
+	
 	for (let file of event.target.files) {
+		stat_info.textContent = ""
 		stat_str.textContent = "0 / 0"
 		
 		if (file) {
@@ -86,7 +97,7 @@ fileInput.addEventListener('change', (event) => {
 				} else if ( file_name_toLowerCase.endsWith('.zip') ) {
 					convertZipToTxt(file)
 				}
-				fileButton.textContent = "Открыта"
+				fileButton.textContent = "Открыты"
 			}
 			
 			reader.readAsText(file)
@@ -97,6 +108,21 @@ fileInput.addEventListener('change', (event) => {
 
 })
 
+
+
+function lite_mod() {
+	const display_str = (document.querySelector('#text-area').style.display == 'none') ? 'block' : 'none';
+	document.querySelector('#text-area').style.display = display_str;
+	document.querySelector('#div-pitch').style.display = display_str;
+	document.querySelector('#div-threads').style.display = display_str;
+	document.querySelector('#div-mergefiles').style.display = display_str;
+	document.querySelector('#stat-area').style.display = display_str;
+	if (display_str == 'none') {
+		document.querySelector("section").classList.replace("options", "optionslite");
+	} else {
+		document.querySelector("section").classList.replace("optionslite", "options");
+	}
+}
 
 function get_text(_filename, _text, is_file) {
 	statArea.value = ""
@@ -129,10 +155,16 @@ function get_text(_filename, _text, is_file) {
 		}
 		statArea.value += "Часть " + (tmp_ind).toString().padStart(4, '0') + ": Открыта\n"
 	}
+	stat_info.textContent = ""//"Открыто"
 	stat_str.textContent = `0 / ${book.all_sentences.length}`
 }
 
-function get_audio(all_in_one) {
+function get_audio() {
+	stat_info.textContent = "Обработано"
+	const stat_count = stat_str.textContent.split(' / ');
+	stat_str.textContent = "0 / " + stat_count[1]
+	const merge = (mergefiles.value == 1) ? false : true;
+	
 	if ( !book_loaded )  {
 		get_text("Text", textArea.value, false)
 	}
@@ -156,7 +188,8 @@ function get_audio(all_in_one) {
 			parts_book.push(
 				new SocketEdgeTTS(
 					n,
-					file_name + " " + (n+1-fix_n).toString().padStart(4, '0'),
+					file_name,// + " " +
+					(n+1-fix_n).toString().padStart(4, '0'),
 					"Microsoft Server Speech Text to Speech Voice (" + voice.value + ")",
 					String(pitch_str.textContent),
 					"+" + String(rate.value) + "%",
@@ -164,7 +197,7 @@ function get_audio(all_in_one) {
 					book.all_sentences[n],
 					statArea,
 					threads_info,
-					all_in_one
+					merge
 				)
 			)
 			n += 1
@@ -175,7 +208,7 @@ function get_audio(all_in_one) {
 		}
 	}, 10)
 	
-	if ( all_in_one ) {
+	if ( merge ) {
 		let timerSave = setTimeout(function tick() {
 			
 				let count_save_part = 0
@@ -188,25 +221,30 @@ function get_audio(all_in_one) {
 				}
 				
 				if ( count_save_part == book.all_sentences.length && mp3_length > 0 ) {
-					const combinedUint8Array = new Uint8Array(mp3_length)
-					let pos = 0
-					for (let part_mp3 of parts_book) {
-						combinedUint8Array.set(part_mp3.my_uint8Array, pos)
-						pos += part_mp3.my_uint8Array.length
+					let num_mp3 = 0
+					let last_ind = 0
+					let count_mp3 = 0
+					let part_mp3_length = 0
+					for (let ind_mp3 = 0; ind_mp3 < parts_book.length; ind_mp3++) {
+						part_mp3_length += parts_book[ind_mp3].my_uint8Array.length
+						if (mergefiles.value < 30 && (count_mp3 >= mergefiles.value-1 || (
+							ind_mp3 < parts_book.length-1 && parts_book[ind_mp3].my_filename != parts_book[ind_mp3 + 1].my_filename
+						))) {
+							num_mp3 += 1
+							save_merge(parts_book, num_mp3, last_ind, ind_mp3, part_mp3_length)
+							if (ind_mp3 < parts_book.length-1 && parts_book[ind_mp3].my_filename != parts_book[ind_mp3 + 1].my_filename) {
+								num_mp3 = 0
+							}
+							count_mp3 = 0
+							part_mp3_length = 0
+							last_ind = ind_mp3 + 1
+						} else {
+							count_mp3 += 1
+						}
 					}
-					
-					var blob_mp3 = new Blob([combinedUint8Array.buffer])
-					const url = window.URL.createObjectURL(blob_mp3)
-					const link = document.createElement('a')
-					link.href = url
-					link.download = book.file_names[0][0] + '.mp3'
-					document.body.appendChild(link)
-					link.click()
-					document.body.removeChild(link)
-					window.URL.revokeObjectURL(url)
-					//statArea.value += "\nСохранено в один файл\n"
-					for (let part_mp3 of parts_book) {
-						part_mp3.clear()
+					if (count_mp3 > 0 && part_mp3_length > 0) {
+						num_mp3 += 1
+						save_merge(parts_book, num_mp3, last_ind, parts_book.length-1, part_mp3_length)
 					}
 					
 				} else {
@@ -217,10 +255,40 @@ function get_audio(all_in_one) {
 	}
 }
 
-const start = () => {
-	get_audio(false)
+function save_merge(parts_book, num_mp3, from_ind, to_ind, mp3_length) {
+	const combinedUint8Array = new Uint8Array(mp3_length)
+	let pos = 0
+	
+	for (let ind_mp3 = from_ind; ind_mp3 <= to_ind; ind_mp3++) {
+		combinedUint8Array.set(parts_book[ind_mp3].my_uint8Array, pos)
+		pos += parts_book[ind_mp3].my_uint8Array.length
+	}
+	
+	var blob_mp3 = new Blob([combinedUint8Array.buffer])
+	const url = window.URL.createObjectURL(blob_mp3)
+	const link = document.createElement('a')
+	link.href = url
+	
+	
+	if (num_mp3 == 1 && to_ind < parts_book.length-1 && parts_book[to_ind].my_filename != parts_book[to_ind + 1].my_filename) {
+		link.download = parts_book[from_ind].my_filename + '.mp3'
+	} else
+	if (mergefiles.value < 30 && mergefiles.value < parts_book.length) {
+		link.download = parts_book[from_ind].my_filename + " " + (num_mp3).toString().padStart(4, '0') + '.mp3'
+	} else {
+		link.download = parts_book[from_ind].my_filename + '.mp3'
+	}
+	
+	document.body.appendChild(link)
+	link.click()
+	document.body.removeChild(link)
+	window.URL.revokeObjectURL(url)
+	
+	for (let ind_mp3 = from_ind; ind_mp3 <= to_ind; ind_mp3++) {
+		parts_book[ind_mp3].clear()
+	}
 }
 
-const start_allone = () => {
-	get_audio(true)
+const start = () => {
+	get_audio()
 }

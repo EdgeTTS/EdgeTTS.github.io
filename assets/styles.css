@@ -26,6 +26,13 @@ label {
     margin-right: 1rem;
 }
 
+.optionslite {
+    display: flex;
+    flex-direction: column;
+	max-width: 20rem;
+	margin: 0 auto;
+}
+
 select {
     background-color: #333;
     border: 1px solid #444;
@@ -41,6 +48,7 @@ option {
     background-color: #333;
     color: #fff;
     padding: 0.5rem;
+	font-size: 1rem;
 }
 
 input {
@@ -64,19 +72,23 @@ button {
 }
 
 #savebutton {
-	width: 48%;
-	display: inline-block;
+    margin-top: .8rem;
 }
 
-#saveallbutton {
-	width: 48%;
-	float: right;
-	display: inline-block;
+rowspace {
+    display: flex;
+    justify-content: space-between;
+	width: 100%;
+    min-width: 20rem;
 }
 
-#save-label {
-	text-align: center;
-    padding-bottom: .9rem;
+.voices {
+    width: 80%;
+}
+
+#settingsbutton {
+	width: 16%;
+    margin-bottom: 1rem;
 }
 
 @media screen and (max-width: 1000px) {

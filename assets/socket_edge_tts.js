@@ -1,5 +1,5 @@
 ﻿class SocketEdgeTTS {
-	constructor(_indexpart, _filename,
+	constructor(_indexpart, _filename, _filenum,
 				_voice, _pitch, _rate, _volume, _text,
 				_statArea, _obj_threads_info, _save_to_var) {
 		this.bytes_data_separator = new TextEncoder().encode("Path:audio\r\n")
@@ -10,6 +10,7 @@
 		
 		this.indexpart = _indexpart
 		this.my_filename = _filename
+		this.my_filenum = _filenum
 		this.my_voice = _voice
 		this.my_pitch = _pitch
 		this.my_rate = _rate
@@ -142,7 +143,7 @@
 	}
 	
 	start_works() {
-		//console.log("Start works...")//console.log(this.my_filename + " start works...")
+		//console.log("Start works...")//console.log(this.my_filename + " " + this.my_filenum + " start works...")
 		if ("WebSocket" in window) {
 			this.socket = new WebSocket(
 				"wss://speech.platform.bing.com/consumer/speech/synthesize/" +
@@ -183,7 +184,7 @@
 				const url = window.URL.createObjectURL(blob_mp3);
 				const link = document.createElement('a');
 				link.href = url;
-				link.download = this.my_filename + '.mp3';
+				link.download = this.my_filename + " " + this.my_filenum + '.mp3';
 				document.body.appendChild(link);
 				link.click();
 				document.body.removeChild(link);
