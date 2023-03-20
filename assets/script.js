@@ -28,6 +28,13 @@ pitch.addEventListener('change', e => pitch_str.textContent = pitch.value >= 0 ?
 max_threads.addEventListener('change', e => max_threads_int.textContent = max_threads.value)
 mergefiles.addEventListener('change', e => mergefiles_str.textContent = mergefiles.value == 30 ? "ВСЕ" : `${mergefiles.value} шт.`)
 
+
+stat_info.addEventListener('click', () => {
+	if (textArea.style.display == 'none') {
+		statArea.style.display = (statArea.style.display == 'none') ? 'block' : 'none';
+	}
+});
+
 const FIRST_STRINGS_SIZE = 800
 const LAST_STRINGS_SIZE = 4200
 var lexx = []
@@ -111,12 +118,12 @@ fileInput.addEventListener('change', (event) => {
 
 
 function lite_mod() {
-	const display_str = (document.querySelector('#text-area').style.display == 'none') ? 'block' : 'none';
-	document.querySelector('#text-area').style.display = display_str;
+	const display_str = (textArea.style.display == 'none') ? 'block' : 'none';
+	textArea.style.display = display_str;
+	statArea.style.display = display_str;
 	document.querySelector('#div-pitch').style.display = display_str;
 	document.querySelector('#div-threads').style.display = display_str;
 	document.querySelector('#div-mergefiles').style.display = display_str;
-	document.querySelector('#stat-area').style.display = display_str;
 	if (display_str == 'none') {
 		document.querySelector("section").classList.replace("options", "optionslite");
 	} else {

@@ -159,7 +159,7 @@ rowspace {
     line-height: inherit;
     padding: 1rem;
     resize: vertical;
-    min-height: 38vh;
+    min-height: 28vh;
     color: #999;
     flex-grow: 1;
     border: none;
