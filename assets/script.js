@@ -23,10 +23,10 @@ const fileButton = document.getElementById('file-button')
 saveButton.addEventListener('click', e => start())
 //save_alloneButton.addEventListener('click', e => start_allone())
 settingsButton.addEventListener('click', e => lite_mod())
-rate.addEventListener('change', e => rate_str.textContent = rate.value >= 0 ? `+${rate.value}%` : `${rate.value}%`)
-pitch.addEventListener('change', e => pitch_str.textContent = pitch.value >= 0 ? `+${pitch.value}Hz` : `${pitch.value}Hz`)
-max_threads.addEventListener('change', e => max_threads_int.textContent = max_threads.value)
-mergefiles.addEventListener('change', e => mergefiles_str.textContent = mergefiles.value == 30 ? "ВСЕ" : `${mergefiles.value} шт.`)
+rate.addEventListener('input', e => rate_str.textContent = rate.value >= 0 ? `+${rate.value}%` : `${rate.value}%`)
+pitch.addEventListener('input', e => pitch_str.textContent = pitch.value >= 0 ? `+${pitch.value}Hz` : `${pitch.value}Hz`)
+max_threads.addEventListener('input', e => max_threads_int.textContent = max_threads.value)
+mergefiles.addEventListener('input', e => mergefiles_str.textContent = mergefiles.value == 30 ? "ВСЕ" : `${mergefiles.value} шт.`)
 
 
 stat_info.addEventListener('click', () => {
