@@ -140,6 +140,7 @@
 		} else {
 			//this.update_stat("Сохранена и Закрыта")
 		}
+		add_edge_tts(this.save_to_var)
 	}
 	
 	start_works() {
@@ -156,6 +157,7 @@
 		} else {
 			console.log("WebSocket NOT supported by your Browser!");
 		}
+		add_edge_tts(this.save_to_var)
 	}
 
 	mkssml() {
@@ -196,7 +198,7 @@
 			this.obj_threads_info.count += 1
 			const stat_count = this.obj_threads_info.stat.textContent.split(' / ');
 			this.obj_threads_info.stat.textContent = String(Number(stat_count[0]) + 1) + " / " + stat_count[1]
-			
+			add_edge_tts(this.save_to_var)
 		} else {
 			console.log("Bad Save_mp3");
 		}

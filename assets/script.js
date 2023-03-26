@@ -26,7 +26,7 @@ settingsButton.addEventListener('click', e => lite_mod())
 rate.addEventListener('input', e => rate_str.textContent = rate.value >= 0 ? `+${rate.value}%` : `${rate.value}%`)
 pitch.addEventListener('input', e => pitch_str.textContent = pitch.value >= 0 ? `+${pitch.value}Hz` : `${pitch.value}Hz`)
 max_threads.addEventListener('input', e => max_threads_int.textContent = max_threads.value)
-mergefiles.addEventListener('input', e => mergefiles_str.textContent = mergefiles.value == 30 ? "ВСЕ" : `${mergefiles.value} шт.`)
+mergefiles.addEventListener('input', e => mergefiles_str.textContent = mergefiles.value == 100 ? "ВСЕ" : `${mergefiles.value} шт.`)
 
 
 stat_info.addEventListener('click', () => {
@@ -40,6 +40,13 @@ const LAST_STRINGS_SIZE = 4200
 var lexx = []
 var book
 var book_loaded = false
+
+var parts_book = []
+var file_name_ind = 0
+var num_book = 0
+var fix_num_book = 0
+var threads_info = { count: parseInt(max_threads.value), stat: stat_str }
+var run_work = false
 
 document.addEventListener("DOMContentLoaded", function(event) {
 	lite_mod()
@@ -71,6 +78,7 @@ fileInputLex.addEventListener('change', (event) => {
 })
 
 fileInput.addEventListener('change', (event) => {
+	run_work = false
 	book_loaded = false
 	statArea.value = ""
 	
@@ -164,9 +172,65 @@ function get_text(_filename, _text, is_file) {
 	}
 	stat_info.textContent = ""//"Открыто"
 	stat_str.textContent = `0 / ${book.all_sentences.length}`
+	
+	//Очистка ранее запущенной обработки
+	clear_old_run()
+}
+
+function clear_old_run() {
+	if (parts_book) {
+		for (let part of parts_book) {
+			if (part) part.clear()
+		}
+	}
+	parts_book = []
+	file_name_ind = 0
+	num_book = 0
+	fix_num_book = 0
+	threads_info = { count: parseInt(max_threads.value), stat: stat_str }	
+}
+
+function add_edge_tts(merge) {
+	if (run_work == true) {
+		if (book && num_book < threads_info.count) {
+			let file_name = book.file_names[file_name_ind][0]
+			let timerId = setTimeout(function tick() {
+				if ( threads_info.count < parseInt(max_threads.value) ) {
+					threads_info.count = parseInt(max_threads.value)
+				}
+				if ( num_book < threads_info.count && num_book < book.all_sentences.length) {
+					if ( book.file_names[file_name_ind][1] > 0 && book.file_names[file_name_ind][1] <= num_book ) {
+						file_name_ind += 1
+						file_name = book.file_names[file_name_ind][0]
+						fix_num_book = num_book
+					}
+					
+					parts_book.push(
+						new SocketEdgeTTS(
+							num_book,
+							file_name,// + " " +
+							(num_book+1-fix_num_book).toString().padStart(4, '0'),
+							"Microsoft Server Speech Text to Speech Voice (" + voice.value + ")",
+							String(pitch_str.textContent),
+							"+" + String(rate.value) + "%",
+							"+0%",
+							book.all_sentences[num_book],
+							statArea,
+							threads_info,
+							merge
+						)
+					)
+					num_book += 1
+				}
+			}, 100)
+		}
+		if (merge) do_marge()
+	}
 }
 
 function get_audio() {
+	clear_old_run()
+	run_work = true
 	stat_info.textContent = "Обработано"
 	const stat_count = stat_str.textContent.split(' / ');
 	stat_str.textContent = "0 / " + stat_count[1]
@@ -175,94 +239,10 @@ function get_audio() {
 	if ( !book_loaded )  {
 		get_text("Text", textArea.value, false)
 	}
-	let n = 0
-	let fix_n = 0
-	let file_name_ind = 0
-	let file_name = book.file_names[file_name_ind][0]
-	let parts_book = []
-	let threads_info = { count: parseInt(max_threads.value), stat: stat_str }
-	let timerId = setTimeout(function tick() {
-		if ( threads_info.count < parseInt(max_threads.value) ) {
-			threads_info.count = parseInt(max_threads.value)
-		}
-		if ( n < threads_info.count && n < book.all_sentences.length) {
-			if ( book.file_names[file_name_ind][1] > 0 && book.file_names[file_name_ind][1] <= n ) {
-				file_name_ind += 1
-				file_name = book.file_names[file_name_ind][0]
-				fix_n = n
-			}
-			
-			parts_book.push(
-				new SocketEdgeTTS(
-					n,
-					file_name,// + " " +
-					(n+1-fix_n).toString().padStart(4, '0'),
-					"Microsoft Server Speech Text to Speech Voice (" + voice.value + ")",
-					String(pitch_str.textContent),
-					"+" + String(rate.value) + "%",
-					"+0%",
-					book.all_sentences[n],
-					statArea,
-					threads_info,
-					merge
-				)
-			)
-			n += 1
-			timerId = setTimeout(tick, 100)
-		} else
-		if ( n >= threads_info.count ) {
-			timerId = setTimeout(tick, 5000)
-		}
-	}, 10)
-	
-	if ( merge ) {
-		let timerSave = setTimeout(function tick() {
-			
-				let count_save_part = 0
-				let mp3_length = 0
-				for (let part of parts_book) {
-					if ( part.mp3_saved == true ) {
-						count_save_part += 1
-						mp3_length += part.my_uint8Array.length
-					}
-				}
-				
-				if ( count_save_part == book.all_sentences.length && mp3_length > 0 ) {
-					let num_mp3 = 0
-					let last_ind = 0
-					let count_mp3 = 0
-					let part_mp3_length = 0
-					for (let ind_mp3 = 0; ind_mp3 < parts_book.length; ind_mp3++) {
-						part_mp3_length += parts_book[ind_mp3].my_uint8Array.length
-						if (mergefiles.value < 30 && (count_mp3 >= mergefiles.value-1 || (
-							ind_mp3 < parts_book.length-1 && parts_book[ind_mp3].my_filename != parts_book[ind_mp3 + 1].my_filename
-						))) {
-							num_mp3 += 1
-							save_merge(parts_book, num_mp3, last_ind, ind_mp3, part_mp3_length)
-							if (ind_mp3 < parts_book.length-1 && parts_book[ind_mp3].my_filename != parts_book[ind_mp3 + 1].my_filename) {
-								num_mp3 = 0
-							}
-							count_mp3 = 0
-							part_mp3_length = 0
-							last_ind = ind_mp3 + 1
-						} else {
-							count_mp3 += 1
-						}
-					}
-					if (count_mp3 > 0 && part_mp3_length > 0) {
-						num_mp3 += 1
-						save_merge(parts_book, num_mp3, last_ind, parts_book.length-1, part_mp3_length)
-					}
-					
-				} else {
-					timerSave = setTimeout(tick, 10000)
-				}
-		}, 10000)	
-		
-	}
+	add_edge_tts(merge)
 }
 
-function save_merge(parts_book, num_mp3, from_ind, to_ind, mp3_length) {
+function save_merge(num_mp3, from_ind, to_ind, mp3_length) {
 	const combinedUint8Array = new Uint8Array(mp3_length)
 	let pos = 0
 	
@@ -280,7 +260,7 @@ function save_merge(parts_book, num_mp3, from_ind, to_ind, mp3_length) {
 	if (num_mp3 == 1 && to_ind < parts_book.length-1 && parts_book[to_ind].my_filename != parts_book[to_ind + 1].my_filename) {
 		link.download = parts_book[from_ind].my_filename + '.mp3'
 	} else
-	if (mergefiles.value < 30 && mergefiles.value < parts_book.length) {
+	if (mergefiles.value < 100 && mergefiles.value < parts_book.length) {
 		link.download = parts_book[from_ind].my_filename + " " + (num_mp3).toString().padStart(4, '0') + '.mp3'
 	} else {
 		link.download = parts_book[from_ind].my_filename + '.mp3'
@@ -293,6 +273,56 @@ function save_merge(parts_book, num_mp3, from_ind, to_ind, mp3_length) {
 	
 	for (let ind_mp3 = from_ind; ind_mp3 <= to_ind; ind_mp3++) {
 		parts_book[ind_mp3].clear()
+	}
+}
+
+function do_marge() {
+	let save_part = false
+	let count_mergefiles = parseInt(mergefiles.value)
+	if (count_mergefiles >= 100) {
+		count_mergefiles = book.all_sentences.length
+	}
+	
+	var books_map = []
+	var sav_ind = true
+	var last_ind = 0
+	var part_mp3_length = 0
+	var count_mp3 = 0
+	var num_mp3 = 1
+	let names_map = book.file_names.map(item => item[1])
+	for (let ind = 0; ind < book.all_sentences.length; ind++) {
+		
+		if (parts_book && ind < parts_book.length && parts_book[ind].mp3_saved == true) {
+			if (sav_ind == true) {
+				part_mp3_length += parts_book[ind].my_uint8Array.length
+			}
+		} else {
+			sav_ind = false
+			part_mp3_length = 0
+		}
+	
+		if (count_mp3 >= count_mergefiles-1 || ind == book.all_sentences.length-1 || names_map.includes(ind+1) ) {
+			books_map.push([sav_ind, last_ind, ind, part_mp3_length, num_mp3])
+			sav_ind = true
+			last_ind = ind+1
+			part_mp3_length = 0
+			count_mp3 = 0
+			if ( names_map.includes(ind+1) ) {
+				num_mp3 = 1
+			} else {
+				num_mp3 += 1				
+			}
+		} else {
+			count_mp3 += 1
+		}
+	}
+
+	if (books_map.length > 0) {
+		for (let book_map of books_map) {
+			if (book_map[0] == true && book_map[3] > 0) {
+				save_merge(book_map[4], book_map[1], book_map[2], book_map[3])
+			}
+		}
 	}
 }
 
