@@ -212,7 +212,7 @@ function add_edge_tts(merge) {
 							(num_book+1-fix_num_book).toString().padStart(4, '0'),
 							"Microsoft Server Speech Text to Speech Voice (" + voice.value + ")",
 							String(pitch_str.textContent),
-							"+" + String(rate.value) + "%",
+							rate_str.textContent,
 							"+0%",
 							book.all_sentences[num_book],
 							statArea,
