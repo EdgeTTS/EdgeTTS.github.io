@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Custom lexicon for speech synthesis -->
+<lexicon version="1.0" xmlns="http://www.w3.org/2005/01/pronunciation-lexicon"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.w3.org/2005/01/pronunciation-lexicon
+         http://www.w3.org/TR/2007/CR-pronunciation-lexicon-20071212/pls.xsd"
+         alphabet="x-microsoft-ups" xml:lang="ru-RU">
+  <lexeme>
+    <grapheme>телефон</grapheme>
+    <phoneme>t j i l j i f o n</phoneme>
+  </lexeme>
+  <lexeme>
+    <grapheme>железнодорожный</grapheme>
+    <phoneme>zh j i l j i z n a d a r o zh n y j</phoneme>
+  </lexeme>
+  <lexeme>
+    <grapheme>дворец</grapheme>
+    <phoneme>d v a r j e t s</phoneme>
+  </lexeme>
+</lexicon>
