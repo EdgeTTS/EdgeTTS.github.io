@@ -19,7 +19,6 @@ const fileInputLex = document.getElementById('file-input-lex')
 const fileInput = document.getElementById('file-input')
 const fileButtonLex = document.getElementById('file-button-lex')
 const fileButton = document.getElementById('file-button')
-
 saveButton.addEventListener('click', e => start())
 //save_alloneButton.addEventListener('click', e => start_allone())
 settingsButton.addEventListener('click', e => lite_mod())
@@ -47,6 +46,7 @@ var num_book = 0
 var fix_num_book = 0
 var threads_info = { count: parseInt(max_threads.value), stat: stat_str }
 var run_work = false
+var save_path_handle
 
 document.addEventListener("DOMContentLoaded", function(event) {
 	lite_mod()
@@ -242,37 +242,57 @@ function get_audio() {
 	add_edge_tts(merge)
 }
 
-function save_merge(num_mp3, from_ind, to_ind, mp3_length) {
-	const combinedUint8Array = new Uint8Array(mp3_length)
-	let pos = 0
-	
-	for (let ind_mp3 = from_ind; ind_mp3 <= to_ind; ind_mp3++) {
-		combinedUint8Array.set(parts_book[ind_mp3].my_uint8Array, pos)
-		pos += parts_book[ind_mp3].my_uint8Array.length
-	}
-	
-	var blob_mp3 = new Blob([combinedUint8Array.buffer])
-	const url = window.URL.createObjectURL(blob_mp3)
-	const link = document.createElement('a')
-	link.href = url
-	
-	
-	if (num_mp3 == 1 && to_ind < parts_book.length-1 && parts_book[to_ind].my_filename != parts_book[to_ind + 1].my_filename) {
-		link.download = parts_book[from_ind].my_filename + '.mp3'
-	} else
-	if (mergefiles.value < 100 && mergefiles.value < parts_book.length) {
-		link.download = parts_book[from_ind].my_filename + " " + (num_mp3).toString().padStart(4, '0') + '.mp3'
-	} else {
-		link.download = parts_book[from_ind].my_filename + '.mp3'
-	}
-	
-	document.body.appendChild(link)
-	link.click()
-	document.body.removeChild(link)
-	window.URL.revokeObjectURL(url)
+async function saveFiles(fix_filename, blob, from_ind, to_ind) {
+	const new_folder_handle = await save_path_handle.getDirectoryHandle(parts_book[from_ind].my_filename, { create: true });
+	const fileHandle = await new_folder_handle.getFileHandle(fix_filename, { create: true });
+	const writableStream = await fileHandle.createWritable();
+	const writable = writableStream.getWriter();
+	await writable.write(blob);
+	await writable.close();
 	
 	for (let ind_mp3 = from_ind; ind_mp3 <= to_ind; ind_mp3++) {
 		parts_book[ind_mp3].clear()
+	}
+}
+
+function save_merge(num_mp3, from_ind, to_ind, mp3_length) {
+	if (parts_book[from_ind].start_save == false) {
+		parts_book[from_ind].start_save = true	
+		const combinedUint8Array = new Uint8Array(mp3_length)
+		let pos = 0
+		
+		for (let ind_mp3 = from_ind; ind_mp3 <= to_ind; ind_mp3++) {
+			combinedUint8Array.set(parts_book[ind_mp3].my_uint8Array, pos)
+			pos += parts_book[ind_mp3].my_uint8Array.length
+		}
+		
+		var blob_mp3 = new Blob([combinedUint8Array.buffer])
+		var fix_filename = "file.mp3"
+		if (num_mp3 == 1 && to_ind < parts_book.length-1 && parts_book[to_ind].my_filename != parts_book[to_ind + 1].my_filename) {
+			fix_filename = parts_book[from_ind].my_filename + '.mp3'
+		} else
+		if (mergefiles.value < 100 && mergefiles.value < parts_book.length) {
+			fix_filename = parts_book[from_ind].my_filename + " " + (num_mp3).toString().padStart(4, '0') + '.mp3'
+		} else {
+			fix_filename = parts_book[from_ind].my_filename + '.mp3'
+		}
+		
+		if (save_path_handle ?? false) {
+			saveFiles(fix_filename, blob_mp3, from_ind, to_ind)
+		} else {	
+			const url = window.URL.createObjectURL(blob_mp3)
+			const link = document.createElement('a')
+			link.href = url
+			link.download = fix_filename
+			document.body.appendChild(link)
+			link.click()
+			document.body.removeChild(link)
+			window.URL.revokeObjectURL(url)
+			
+			for (let ind_mp3 = from_ind; ind_mp3 <= to_ind; ind_mp3++) {
+				parts_book[ind_mp3].clear()
+			}
+		}
 	}
 }
 
@@ -326,6 +346,16 @@ function do_marge() {
 	}
 }
 
-const start = () => {
+async function selectDirectory() {
+  try {
+    save_path_handle = await window.showDirectoryPicker();
 	get_audio()
+  } catch (err) {
+	save_path_handle = null
+	get_audio()
+  }
+}
+
+const start = () => {
+	selectDirectory()
 }

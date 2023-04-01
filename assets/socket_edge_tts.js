@@ -22,6 +22,7 @@
 		this.save_to_var = _save_to_var
 		this.obj_threads_info = _obj_threads_info
 		this.end_message_received = false
+		this.start_save = false	
 		
 		//Start
 		this.start_works()
@@ -29,13 +30,14 @@
 
 	clear() {
 		//this.socket = null;	
-		this.end_message_received = false		
+		this.end_message_received = false	
 		this.my_uint8Array = null
 		this.my_uint8Array = new Uint8Array(0)
 		for (let part of this.audios) {
 			part = null
 		}
 		this.audios = []
+		this.start_save = false
 	}
 
 	date_to_string() {
@@ -177,22 +179,38 @@
 		return uuid.replace(/-/g, '');
 	}
 	
+	async saveFiles(blob) {
+		if (this.start_save == false) {
+			this.start_save = true
+			const new_folder_handle = await save_path_handle.getDirectoryHandle(this.my_filename, { create: true });			
+			const fileHandle = await new_folder_handle.getFileHandle(this.my_filename + " " + this.my_filenum + '.mp3', { create: true });
+			const writableStream = await fileHandle.createWritable();
+			const writable = writableStream.getWriter();
+			await writable.write(blob);
+			await writable.close();
+			this.clear()
+		}
+	}
+	
 	save_mp3() {
 		//console.log("Save_mp3");
 		if ( this.my_uint8Array.length > 0 ) {
 			this.mp3_saved = true
 			if ( !this.save_to_var ) {				
 				var blob_mp3 = new Blob([this.my_uint8Array.buffer]);
-				const url = window.URL.createObjectURL(blob_mp3);
-				const link = document.createElement('a');
-				link.href = url;
-				link.download = this.my_filename + " " + this.my_filenum + '.mp3';
-				document.body.appendChild(link);
-				link.click();
-				document.body.removeChild(link);
-				window.URL.revokeObjectURL(url);
-				
-				this.clear()
+				if (save_path_handle ?? false) {
+					this.saveFiles(blob_mp3)
+				} else {
+					const url = window.URL.createObjectURL(blob_mp3);
+					const link = document.createElement('a');
+					link.href = url;
+					link.download = this.my_filename + " " + this.my_filenum + '.mp3';
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
+					window.URL.revokeObjectURL(url);
+					this.clear()
+				}
 			}
 			this.update_stat("Сохранена")
 			this.obj_threads_info.count += 1

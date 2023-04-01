@@ -71,10 +71,6 @@ button {
     cursor: pointer;
 }
 
-#savebutton {
-    margin-top: .8rem;
-}
-
 rowspace {
     display: flex;
     justify-content: space-between;
@@ -89,6 +85,18 @@ rowspace {
 #settingsbutton {
 	width: 16%;
     margin-bottom: 1rem;
+}
+
+#setsavepath {
+	width: 16%;
+    margin-bottom: 1rem;
+    margin-top: .8rem;
+}
+
+#savebutton {
+	width: 100%;
+    margin-bottom: 1rem;
+    margin-top: .8rem;
 }
 
 @media screen and (max-width: 1000px) {
