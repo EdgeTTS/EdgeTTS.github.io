@@ -132,10 +132,24 @@ function lite_mod() {
 	document.querySelector('#div-pitch').style.display = display_str;
 	document.querySelector('#div-threads').style.display = display_str;
 	document.querySelector('#div-mergefiles').style.display = display_str;
+	
+	if (book && book.all_sentences.length > 0) {
+		textArea.value = ""
+	}
+	
 	if (display_str == 'none') {
 		document.querySelector("section").classList.replace("options", "optionslite");
 	} else {
 		document.querySelector("section").classList.replace("optionslite", "options");
+		
+		if (book && book.all_sentences.length > 0) {
+			let tmp_ind = 0
+			for (let part of book.all_sentences) {
+				tmp_ind += 1
+				textArea.value += "Часть " + tmp_ind + ":\n" + part + "\n\n"
+			}
+		}
+		
 	}
 }
 
@@ -165,7 +179,7 @@ function get_text(_filename, _text, is_file) {
 	let tmp_ind = 0
 	for (let part of book.all_sentences) {
 		tmp_ind += 1
-		if ( is_file == true ) {
+		if ( is_file == true && textArea.style.display != 'none') {
 			textArea.value += "Часть " + tmp_ind + ":\n" + part + "\n\n"
 		}
 		statArea.value += "Часть " + (tmp_ind).toString().padStart(4, '0') + ": Открыта\n"
