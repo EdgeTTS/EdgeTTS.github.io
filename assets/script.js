@@ -362,9 +362,14 @@ function do_marge() {
 
 async function selectDirectory() {
   try {
-    save_path_handle = await window.showDirectoryPicker();
+    save_path_handle = await window.showDirectoryPicker()
+    const fileHandle = await save_path_handle.getFileHandle('temp.txt', {create: true})
+    const writable = await fileHandle.createWritable()
+    await writable.close()
+    await fileHandle.remove()
 	get_audio()
   } catch (err) {
+    console.log('err', err);
 	save_path_handle = null
 	get_audio()
   }
