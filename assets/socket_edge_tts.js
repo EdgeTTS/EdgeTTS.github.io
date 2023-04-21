@@ -164,6 +164,15 @@
 
 	mkssml() {
 		return (
+			//"<speak version='1.0' " + 
+			//'xmlns="http://www.w3.org/2001/10/synthesis" ' +
+			//'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
+			//'xsi:schemaLocation="http://www.w3.org/2001/10/synthesis ' +
+			//'http://www.w3.org/TR/speech-synthesis/synthesis.xsd" ' +
+			//"xml:lang='en-US'>\n" +
+			//"<voice name='en-US-JennyNeural'>" +
+			//'His name is Mike' +
+			//"</voice></speak>"		
 			"<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>\n" +
 			"<voice name='" + this.my_voice + "'><prosody pitch='" + this.my_pitch + "' rate='" + this.my_rate + "' volume='" + this.my_volume + "'>\n" +
 			this.my_text + "</prosody></voice></speak>"

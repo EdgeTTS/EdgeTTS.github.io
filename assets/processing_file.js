@@ -14,6 +14,7 @@
 	  const result = [];
 	  let fix_text = text.replace(/[~\|\*\^]/g, "-");
 	  fix_text = fix_text.replace(/\\/g, "/");
+	  fix_text = fix_text.replace(/&/g, " и ");
 //	  if ( fix_text.includes("\r\n") == true ) {
 //		fix_text = fix_text.replace(/([^\.\,\!\?\:\;\-])\r\n/g, (match, p1) => p1 + ".\r\n")
 //	  } else {
