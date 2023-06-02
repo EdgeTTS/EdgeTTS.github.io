@@ -50,6 +50,10 @@
 		}
 	  }
 	  
+	  if (pointsButton.innerHTML == "ДА") {
+		  fix_text = fix_text.replace(/\./g, ",");
+	  }
+	  
 	  const pointsList = fix_text.split('\n').filter(Boolean);
 	  return pointsList;
 	}

@@ -18,6 +18,10 @@ label {
     color: #bbb;
 }
 
+#pointslabel {
+    margin-top: 0.5rem;
+}
+
 .options {
     display: flex;
     flex-direction: column;
@@ -82,7 +86,7 @@ rowspace {
     width: 80%;
 }
 
-#settingsbutton {
+#settingsbutton, #pointsbutton {
 	width: 16%;
     margin-bottom: 1rem;
 }

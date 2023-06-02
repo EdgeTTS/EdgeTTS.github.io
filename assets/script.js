@@ -10,6 +10,7 @@ const mergefiles_str = document.querySelector('#mergefiles-str')
 const voice = document.querySelector('.voices')
 const saveButton = document.querySelector('.save')
 const settingsButton = document.querySelector('.settingsbutton')
+const pointsButton = document.querySelector('.pointsbutton')
 const textArea = document.getElementById('text-area')
 const statArea = document.getElementById('stat-area')
 const stat_info = document.querySelector('#stat-info')
@@ -123,7 +124,13 @@ fileInput.addEventListener('change', (event) => {
 
 })
 
-
+function points_mod() {
+	if (pointsButton.innerHTML === "ДА") {
+		pointsButton.innerHTML = "НЕТ";
+	} else {
+		pointsButton.innerHTML = "ДА";
+	}
+}
 
 function lite_mod() {
 	const display_str = (textArea.style.display == 'none') ? 'block' : 'none';
