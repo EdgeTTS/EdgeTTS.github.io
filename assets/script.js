@@ -44,6 +44,7 @@ var book_loaded = false
 var parts_book = []
 var file_name_ind = 0
 var num_book = 0
+var num_text = 0
 var fix_num_book = 0
 var threads_info = { count: parseInt(max_threads.value), stat: stat_str }
 var run_work = false
@@ -258,7 +259,8 @@ function get_audio() {
 	const merge = (mergefiles.value == 1) ? false : true;
 	
 	if ( !book_loaded )  {
-		get_text("Text", textArea.value, false)
+		num_text += 1
+		get_text("Text " + (num_text).toString().padStart(4, '0'), textArea.value, false)
 	}
 	add_edge_tts(merge)
 }
