@@ -391,6 +391,7 @@ async function selectDirectory() {
 }
 
 const start = () => {
+	save_settings()
 	selectDirectory()
 }
 
