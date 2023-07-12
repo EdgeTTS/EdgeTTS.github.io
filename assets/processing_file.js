@@ -27,12 +27,12 @@
 	  if ( this.lang_lexx.length > 0 ) {
 		  
 		for (const rule of this.lang_lexx) {
-		  const match = rule.match(/^regex"(.*)"="(.*)"$/)
-		  
+		  const match = rule.match(/^regex"(.*)"="(.*)"/)
 		  if (match) {
 			//Применение regex
 			const regex = new RegExp(match[1], 'g')
-			const replacement = match[2]
+			const replacement = match[2].replace(/\\n/g, '\n')
+			
 			fix_text = fix_text.replace(regex, replacement)
 		  } else if ( rule.length > 0 ) {
 			//Применение не regex
@@ -50,8 +50,14 @@
 		}
 	  }
 	  
-	  if (pointsButton.innerHTML == "ДА") {
+	  if (pointsButton.innerHTML === "V1") {
 		  fix_text = fix_text.replace(/\./g, ",");
+	  } else if (pointsButton.innerHTML === "V2") {
+		  fix_text = fix_text.replace(new RegExp('\\.[ \\t]{1,}\\n', 'g'), '.\n')
+		  fix_text = fix_text.replace(new RegExp('\\.[ \\t]', 'g'), ', ')
+	  } else if (pointsButton.innerHTML === "V3") {
+		  fix_text = fix_text.replace(new RegExp('\\.[ \\t]{1,}\\n', 'g'), '.\n')
+		  fix_text = fix_text.replace(new RegExp('\\.(?![\\r\\n])', 'g'), ',')
 	  }
 	  
 	  const pointsList = fix_text.split('\n').filter(Boolean);

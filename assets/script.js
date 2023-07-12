@@ -126,10 +126,14 @@ fileInput.addEventListener('change', (event) => {
 })
 
 function points_mod() {
-	if (pointsButton.innerHTML === "ДА") {
+	if (pointsButton.innerHTML === "V1") {
+		pointsButton.innerHTML = "V2";
+	} else if (pointsButton.innerHTML === "V2") {
+		pointsButton.innerHTML = "V3";
+	} else if (pointsButton.innerHTML === "V3") {
 		pointsButton.innerHTML = "НЕТ";
-	} else {
-		pointsButton.innerHTML = "ДА";
+	} else if (pointsButton.innerHTML === "НЕТ") {
+		pointsButton.innerHTML = "V1";
 	}
 }
 
