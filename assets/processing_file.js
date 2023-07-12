@@ -54,10 +54,10 @@
 		  fix_text = fix_text.replace(/\./g, ",");
 	  } else if (pointsButton.innerHTML === "V2") {
 		  fix_text = fix_text.replace(new RegExp('\\.[ \\t]{1,}\\n', 'g'), '.\n')
-		  fix_text = fix_text.replace(new RegExp('\\.[ \\t]', 'g'), ', ')
+		  fix_text = fix_text.replace(new RegExp('\\.(?![\\r\\n])', 'g'), ',')
 	  } else if (pointsButton.innerHTML === "V3") {
 		  fix_text = fix_text.replace(new RegExp('\\.[ \\t]{1,}\\n', 'g'), '.\n')
-		  fix_text = fix_text.replace(new RegExp('\\.(?![\\r\\n])', 'g'), ',')
+		  fix_text = fix_text.replace(new RegExp('\\.[ \\t]', 'g'), ', ')
 	  }
 	  
 	  const pointsList = fix_text.split('\n').filter(Boolean);

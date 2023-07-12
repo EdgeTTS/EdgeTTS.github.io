@@ -15,11 +15,11 @@ const textArea = document.getElementById('text-area')
 const statArea = document.getElementById('stat-area')
 const stat_info = document.querySelector('#stat-info')
 const stat_str = document.querySelector('#stat-str')
-
 const fileInputLex = document.getElementById('file-input-lex')
 const fileInput = document.getElementById('file-input')
 const fileButtonLex = document.getElementById('file-button-lex')
 const fileButton = document.getElementById('file-button')
+
 saveButton.addEventListener('click', e => start())
 //save_alloneButton.addEventListener('click', e => start_allone())
 settingsButton.addEventListener('click', e => lite_mod())
@@ -27,6 +27,7 @@ rate.addEventListener('input', e => rate_str.textContent = rate.value >= 0 ? `+$
 pitch.addEventListener('input', e => pitch_str.textContent = pitch.value >= 0 ? `+${pitch.value}Hz` : `${pitch.value}Hz`)
 max_threads.addEventListener('input', e => max_threads_int.textContent = max_threads.value)
 mergefiles.addEventListener('input', e => mergefiles_str.textContent = mergefiles.value == 100 ? "ВСЕ" : `${mergefiles.value} шт.`)
+window.addEventListener('beforeunload', function(event) { save_settings() });
 
 
 stat_info.addEventListener('click', () => {
@@ -52,6 +53,7 @@ var save_path_handle
 
 document.addEventListener("DOMContentLoaded", function(event) {
 	lite_mod()
+	load_settings()
 });
 
 fileButtonLex.addEventListener('click', () => {
@@ -390,4 +392,35 @@ async function selectDirectory() {
 
 const start = () => {
 	selectDirectory()
+}
+
+
+function save_settings() {
+	console.log(pointsButton.innerHTML)
+	localStorage.setItem('pointsButton_innerHTML'     , pointsButton.innerHTML     )
+	localStorage.setItem('voice_value'                , voice.value                )
+	localStorage.setItem('rate_value'                 , rate.value                 )
+	localStorage.setItem('pitch_value'                , pitch.value                )
+	localStorage.setItem('max_threads_value'          , max_threads.value          )
+	localStorage.setItem('mergefiles_value'           , mergefiles.value           )
+	localStorage.setItem('rate_str_textContent'       , rate_str.textContent       )
+	localStorage.setItem('pitch_str_textContent'      , pitch_str.textContent      )
+	localStorage.setItem('max_threads_int_textContent', max_threads_int.textContent)
+	localStorage.setItem('mergefiles_str_textContent' , mergefiles_str.textContent )
+	localStorage.setItem('statArea_style_display'     , statArea.style.display     )
+}
+
+function load_settings() {
+	if (localStorage.getItem('pointsButton_innerHTML'     )) { pointsButton.innerHTML      = localStorage.getItem('pointsButton_innerHTML'     ) }
+	if (localStorage.getItem('voice_value'                )) { voice.value                 = localStorage.getItem('voice_value'                ) }
+	if (localStorage.getItem('rate_value'                 )) { rate.value                  = localStorage.getItem('rate_value'                 ) }
+	if (localStorage.getItem('pitch_value'                )) { pitch.value                 = localStorage.getItem('pitch_value'                ) }
+	if (localStorage.getItem('max_threads_value'          )) { max_threads.value           = localStorage.getItem('max_threads_value'          ) }
+	if (localStorage.getItem('mergefiles_value'           )) { mergefiles.value            = localStorage.getItem('mergefiles_value'           ) }
+	if (localStorage.getItem('rate_str_textContent'       )) { rate_str.textContent        = localStorage.getItem('rate_str_textContent'       ) }
+	if (localStorage.getItem('pitch_str_textContent'      )) { pitch_str.textContent       = localStorage.getItem('pitch_str_textContent'      ) }
+	if (localStorage.getItem('max_threads_int_textContent')) { max_threads_int.textContent = localStorage.getItem('max_threads_int_textContent') }
+	if (localStorage.getItem('mergefiles_str_textContent' )) { mergefiles_str.textContent  = localStorage.getItem('mergefiles_str_textContent' ) }
+	if (localStorage.getItem('statArea_style_display'     )) { statArea.style.display      = localStorage.getItem('statArea_style_display'     ) }
+	threads_info = { count: parseInt(max_threads.value), stat: stat_str }
 }
