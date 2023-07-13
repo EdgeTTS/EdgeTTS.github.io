@@ -82,11 +82,11 @@ rowspace {
     min-width: 20rem;
 }
 
-.voices {
+.voices, .pointsselect {
     width: 80%;
 }
 
-#settingsbutton, #pointsbutton {
+#settingsbutton, #pointstype {
 	width: 16%;
     margin-bottom: 1rem;
 }

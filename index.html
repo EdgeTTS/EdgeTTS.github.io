@@ -322,8 +322,14 @@
 		</select>
     </rowspace>
     <rowspace>
-		<label id="pointslabel">Заменять точки на запятые</label>
-		<button class="pointsbutton" id="pointsbutton" onclick="points_mod()">НЕТ</button>
+		<select class="pointsselect" id="pointsselect" name="pointsselect">
+			<option>Не заменять точки</option>
+			<option>Заменять точки на ,</option>
+			<option>Заменять точки на ;</option>
+			<option>Заменять точки на :</option>
+			<option>Заменять точки на -</option>
+		</select>
+		<button class="pointstype" id="pointstype" onclick="points_mod()">V1</button>
     </rowspace>
 
     <div id="div-rate" class="slidecontainer">
