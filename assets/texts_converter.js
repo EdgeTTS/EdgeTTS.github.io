@@ -1,7 +1,7 @@
 ﻿//FB2 to TXT
 function convertFb2ToTxt(fb2String) {
     const parser = new DOMParser();
-    const fb2Doc = parser.parseFromString(fb2String, 'application/xml');
+    const fb2Doc = parser.parseFromString(fb2String.replace(/<p>/g, "\n<p>"), 'application/xml');
     let textContent = '';
     const bodyNode = fb2Doc.getElementsByTagName('body')[0];
     if (bodyNode) {
