@@ -37,12 +37,12 @@
 		  } else if ( rule.length > 0 ) {
 			//Применение не regex
 			if ( rule[0] == '"' ) {
-				const match_arr = rule.replaceAll('"', "").split("=")
+				const match_arr = rule.trim().replaceAll('"', "").split("=")
 				if ( match_arr.length == 2 ) {
 					fix_text = fix_text.replaceAll(match_arr[0].toString(), match_arr[1].toString())
 				}
 			} else {
-				const match_arr = rule.split("=")
+				const match_arr = rule.trim().split("=")
 				const regex = new RegExp('(^|\\s)'+match_arr[0].toString()+'(?=\\s|$)', 'gi');				
 				fix_text = fix_text.replace(regex, '$1'+match_arr[1].toString())
 			}
