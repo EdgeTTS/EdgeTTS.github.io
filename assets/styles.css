@@ -122,6 +122,13 @@ rowspace {
   display: none;
 }
 
+#dop-settings-label {
+    height: 50px;
+    line-height: 50px; 
+	text-align: center;
+	cursor: pointer;
+}
+
 #left-label {
     padding-bottom: .9rem;
 	text-align: center;

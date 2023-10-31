@@ -20,8 +20,10 @@ const fileInputLex = document.getElementById('file-input-lex')
 const fileInput = document.getElementById('file-input')
 const fileButtonLex = document.getElementById('file-button-lex')
 const fileButton = document.getElementById('file-button')
+const dopSettings = document.getElementById('dop-settings-label')
 
 saveButton.addEventListener('click', e => start())
+dopSettings.addEventListener('click', e => change_dopSettings())
 //save_alloneButton.addEventListener('click', e => start_allone())
 settingsButton.addEventListener('click', e => lite_mod())
 rate.addEventListener('input', e => rate_str.textContent = rate.value >= 0 ? `+${rate.value}%` : `${rate.value}%`)
@@ -55,7 +57,8 @@ var save_path_handle
 document.addEventListener("DOMContentLoaded", function(event) {
 	lite_mod()
 	load_settings()
-});
+	set_dopSettings()
+})
 
 fileButtonLex.addEventListener('click', () => {
 	fileInputLex.click();
@@ -64,6 +67,22 @@ fileButtonLex.addEventListener('click', () => {
 fileButton.addEventListener('click', () => {
 	fileInput.click();
 })
+
+function change_dopSettings() {
+	if (dopSettings.textContent == "︿") {
+		dopSettings.textContent = "﹀"
+	} else {
+		dopSettings.textContent = "︿"
+	}
+	set_dopSettings()
+}
+
+function set_dopSettings() {
+	const display_dop = (textArea.style.display == 'block' || dopSettings.textContent == "︿") ? 'block' : 'none';
+	document.querySelector('#div-pitch').style.display = display_dop
+	document.querySelector('#div-threads').style.display = display_dop
+	document.querySelector('#div-mergefiles').style.display = display_dop
+}
 
 fileInputLex.addEventListener('change', (event) => {
 	lexx = []
@@ -129,21 +148,25 @@ fileInput.addEventListener('change', (event) => {
 })
 
 function lite_mod() {
-	const display_str = (textArea.style.display == 'none') ? 'block' : 'none';
+	const display_str = (textArea.style.display == 'none') ? 'block' : 'none'
+	const display_dop = (textArea.style.display == 'none' || dopSettings.textContent == "︿") ? 'block' : 'none';
 	textArea.style.display = display_str;
 	statArea.style.display = display_str;
-	document.querySelector('#div-pitch').style.display = display_str;
-	document.querySelector('#div-threads').style.display = display_str;
-	document.querySelector('#div-mergefiles').style.display = display_str;
+	
+	document.querySelector('#div-pitch').style.display = display_dop
+	document.querySelector('#div-threads').style.display = display_dop
+	document.querySelector('#div-mergefiles').style.display = display_dop
 	
 	if (book && book.all_sentences.length > 0) {
 		textArea.value = ""
 	}
 	
 	if (display_str == 'none') {
-		document.querySelector("section").classList.replace("options", "optionslite");
+		dopSettings.style.display = 'block'
+		document.querySelector("section").classList.replace("options", "optionslite")
 	} else {
-		document.querySelector("section").classList.replace("optionslite", "options");
+		dopSettings.style.display = 'none'
+		document.querySelector("section").classList.replace("optionslite", "options")
 		
 		if (book && book.all_sentences.length > 0) {
 			let tmp_ind = 0
@@ -396,18 +419,19 @@ function points_mod() {
 }
 
 function save_settings() {
-	localStorage.setItem('pointsSelect_value'         , pointsSelect.value         )
-	localStorage.setItem('pointsType_innerHTML'       , pointsType.innerHTML       )
-	localStorage.setItem('voice_value'                , voice.value                )
-	localStorage.setItem('rate_value'                 , rate.value                 )
-	localStorage.setItem('pitch_value'                , pitch.value                )
-	localStorage.setItem('max_threads_value'          , max_threads.value          )
-	localStorage.setItem('mergefiles_value'           , mergefiles.value           )
-	localStorage.setItem('rate_str_textContent'       , rate_str.textContent       )
-	localStorage.setItem('pitch_str_textContent'      , pitch_str.textContent      )
-	localStorage.setItem('max_threads_int_textContent', max_threads_int.textContent)
-	localStorage.setItem('mergefiles_str_textContent' , mergefiles_str.textContent )
-	localStorage.setItem('statArea_style_display'     , statArea.style.display     )
+	localStorage.setItem('pointsSelect_value'         , pointsSelect.value          )
+	localStorage.setItem('pointsType_innerHTML'       , pointsType.innerHTML        )
+	localStorage.setItem('voice_value'                , voice.value                 )
+	localStorage.setItem('rate_value'                 , rate.value                  )
+	localStorage.setItem('pitch_value'                , pitch.value                 )
+	localStorage.setItem('max_threads_value'          , max_threads.value           )
+	localStorage.setItem('mergefiles_value'           , mergefiles.value            )
+	localStorage.setItem('rate_str_textContent'       , rate_str.textContent        )
+	localStorage.setItem('pitch_str_textContent'      , pitch_str.textContent       )
+	localStorage.setItem('max_threads_int_textContent', max_threads_int.textContent )
+	localStorage.setItem('mergefiles_str_textContent' , mergefiles_str.textContent  )
+	localStorage.setItem('statArea_style_display'     , statArea.style.display      )
+	localStorage.setItem('dopSettings_textContent'    , dopSettings.textContent     )
 }
 
 function load_settings() {
@@ -423,5 +447,6 @@ function load_settings() {
 	if (localStorage.getItem('max_threads_int_textContent')) { max_threads_int.textContent = localStorage.getItem('max_threads_int_textContent') }
 	if (localStorage.getItem('mergefiles_str_textContent' )) { mergefiles_str.textContent  = localStorage.getItem('mergefiles_str_textContent' ) }
 	if (localStorage.getItem('statArea_style_display'     )) { statArea.style.display      = localStorage.getItem('statArea_style_display'     ) }
+	if (localStorage.getItem('dopSettings_textContent'    )) { dopSettings.textContent     = localStorage.getItem('dopSettings_textContent'    ) }
 	threads_info = { count: parseInt(max_threads.value), stat: stat_str }
 }
