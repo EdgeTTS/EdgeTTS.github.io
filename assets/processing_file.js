@@ -73,6 +73,14 @@
 	  let current_text = "";
 
 	  for (let i = 0; i < sentences.length; i++) {
+		  
+		if(i > 2 && sentences[i].trim() != "" && sentences[i-1].trim() == "" && sentences[i-2].trim() == "" && sentences[i-3].trim() == "") {
+		  current_text += "\n";
+		  if (current_text.length > 0) {
+			result.push(current_text)
+			current_text = ''
+		  }
+		}
 		let line = sentences[i];
 		let words = line.split(splitter);
 		for (let j = 0; j < words.length; j++) {

@@ -129,6 +129,8 @@ fileInput.addEventListener('change', (event) => {
 				
 				if ( file_name_toLowerCase.endsWith('.txt') ) {
 					get_text(file.name.slice(0, file.name.lastIndexOf(".")), reader.result, true)	
+				} else if ( file_name_toLowerCase.endsWith('.ini') ) {
+					get_text(file.name.slice(0, file.name.lastIndexOf(".")), reader.result, true)	
 				} else if ( file_name_toLowerCase.endsWith('.fb2') ) {
 					get_text(file.name.slice(0, file.name.lastIndexOf(".")), convertFb2ToTxt(reader.result), true)	
 				} else if ( file_name_toLowerCase.endsWith('.epub') ) {
