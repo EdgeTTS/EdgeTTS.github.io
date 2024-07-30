@@ -31,7 +31,7 @@
 		  if (match) {
 			//Применение regex
 			const regex = new RegExp(match[1], 'g')
-			const replacement = match[2].replace(/\\n/g, '\n')
+			const replacement = match[2].replace(/\\r/g, '\r').replace(/\\n/g, '\n')
 			
 			fix_text = fix_text.replace(regex, replacement)
 		  } else if ( rule.length > 0 ) {
@@ -51,17 +51,22 @@
 	  }
 	  
 	  if (pointsSelect.value !== 'Не заменять точки') {
-		  var new_point = pointsSelect.value[pointsSelect.value.length - 1]
-		  if (pointsType.innerHTML === "V1") {
-			  fix_text = fix_text.replace(/\./g, new_point)
-		  } else if (pointsType.innerHTML === "V2") {
-			  fix_text = fix_text.replace(new RegExp('\\.[ \\t]{1,}\\n', 'g'), '.\n')
-			  fix_text = fix_text.replace(new RegExp('\\.(?![\\r\\n])', 'g'), new_point)
-		  } else if (pointsType.innerHTML === "V3") {
-			  fix_text = fix_text.replace(new RegExp('\\.[ \\t]{1,}\\n', 'g'), '.\n')
-			  fix_text = fix_text.replace(new RegExp('\\.[ \\t]', 'g'), new_point + ' ')
+		  if (pointsSelect.value == 'Заменять на три строки') {
+			  fix_text = fix_text.replace(/\./g, '\r\n\r\n\r\n\r\n')
+		  } else {
+			  var new_point = pointsSelect.value[pointsSelect.value.length - 1]
+			  if (pointsType.innerHTML === "V1") {
+				  fix_text = fix_text.replace(/\./g, new_point)
+			  } else if (pointsType.innerHTML === "V2") {
+				  fix_text = fix_text.replace(new RegExp('\\.[ \\t]{1,}\\n', 'g'), '.\n')
+				  fix_text = fix_text.replace(new RegExp('\\.(?![\\r\\n])', 'g'), new_point)
+			  } else if (pointsType.innerHTML === "V3") {
+				  fix_text = fix_text.replace(new RegExp('\\.[ \\t]{1,}\\n', 'g'), '.\n')
+				  fix_text = fix_text.replace(new RegExp('\\.[ \\t]', 'g'), new_point + ' ')
+			  }
 		  }
 	  }
+	
 	  
 	  const pointsList = fix_text.split('\n').filter(Boolean);
 	  return pointsList;
