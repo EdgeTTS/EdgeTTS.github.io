@@ -71,7 +71,11 @@
 	  const pointsList = fix_text.split('\n').filter(Boolean);
 	  return pointsList;
 	}
-
+	
+	containsPronounceableChars(str) {
+	  return /[\p{L}\p{N}]/u.test(str);
+	}
+	
 	get_fix_section(sentences) {
 	  let result = [];
 	  let splitter = " ";
@@ -79,7 +83,7 @@
 
 	  for (let i = 0; i < sentences.length; i++) {
 		  
-		if(i > 2 && sentences[i].trim() != "" && sentences[i-1].trim() == "" && sentences[i-2].trim() == "" && sentences[i-3].trim() == "") {
+		if(i > 2 && sentences[i].trim() != "" && sentences[i-1].trim() == "" && sentences[i-2].trim() == "" && sentences[i-3].trim() == "" && this.containsPronounceableChars(current_text) == true) {
 		  current_text += "\n";
 		  if (current_text.length > 0) {
 			result.push(current_text)
