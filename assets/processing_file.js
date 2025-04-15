@@ -43,7 +43,7 @@
 				}
 			} else {
 				const match_arr = rule.trim().split("=")
-				const regex = new RegExp('(^|\\s)'+match_arr[0].toString()+'(?=\\s|$)', 'gi');				
+				const regex = new RegExp('(^|\\s|\\p{P})' + match_arr[0].toString() + '(?=\\p{P}|\\s|$)', 'giu');
 				fix_text = fix_text.replace(regex, '$1'+match_arr[1].toString())
 			}
 		  }
