@@ -39,12 +39,19 @@
 			if ( rule[0] == '"' ) {
 				const match_arr = rule.trim().replaceAll('"', "").split("=")
 				if ( match_arr.length == 2 ) {
-					fix_text = fix_text.replaceAll(match_arr[0].toString(), match_arr[1].toString())
+					const regex = new RegExp(this.get_escaped(match_arr[0]), 'giu');
+					fix_text = fix_text.replace(regex, match_arr[1]);
 				}
 			} else {
-				const match_arr = rule.trim().split("=")
-				const regex = new RegExp('(^|\\s|\\p{P})' + match_arr[0].toString() + '(?=\\p{P}|\\s|$)', 'giu');
-				fix_text = fix_text.replace(regex, '$1'+match_arr[1].toString())
+				const match_arr = rule.trim().split("=");
+				const escaped = this.get_escaped(match_arr[0]);
+				if (this.is_punctuation(match_arr[0]) == true) {
+					const regex = new RegExp(escaped, 'giu');
+					fix_text = fix_text.replace(regex, match_arr[1]);
+				} else {
+					const regex = new RegExp('(^|\\s|\\p{P})' + escaped + '(?=\\p{P}|\\s|$)', 'giu');
+					fix_text = fix_text.replace(regex, '$1' + match_arr[1]);
+				}
 			}
 		  }
 		}
@@ -66,10 +73,17 @@
 			  }
 		  }
 	  }
-	
 	  
 	  const pointsList = fix_text.split('\n').filter(Boolean);
 	  return pointsList;
+	}
+	
+	is_punctuation(str) {
+		return str.length === 1 && /\p{P}/u.test(str);
+	}
+	
+	get_escaped(str) {
+	  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	}
 	
 	containsPronounceableChars(str) {
