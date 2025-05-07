@@ -351,7 +351,6 @@
 		</select>
 		<button class="pointstype" id="pointstype" onclick="points_mod()">V1</button>
     </rowspace>
-
     <div id="div-rate" class="slidecontainer">
 	  <br>
       <label for="rate">Скорость <output style="float: right;" id="rate-str">+100%</output></label>
@@ -369,9 +368,13 @@
     </div>
     <div id="div-mergefiles" class="slidecontainer">
 	  <br>
-      <label for="max-threads">Объединять MP3 по<output style="float: right;" id="mergefiles-str">10 шт.</output></label>
+      <label for="mergefiles">Объединять MP3 по<output style="float: right;" id="mergefiles-str">10 шт.</output></label>
       <input type="range" min=1 max=100 value=10 step=1 class="mergefiles" id="mergefiles">
     </div>
+	<div id="div-lexx_register" class="checkbox-wrapper-2">
+		<br>
+		<label for="lexx_register" class="checkbox-label">Учитывать регистр словаря<input id="lexx_register" type="checkbox" class="sc-gJwTLC ikxBAC"></label>
+	</div>
 	<label id="dop-settings-label">﹀</label>
 	<br>
     <myspace class="myspace">

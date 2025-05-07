@@ -21,9 +21,11 @@ const fileInput = document.getElementById('file-input')
 const fileButtonLex = document.getElementById('file-button-lex')
 const fileButton = document.getElementById('file-button')
 const dopSettings = document.getElementById('dop-settings-label')
+const cbLexxRegister = document.getElementById('lexx_register')
 
 saveButton.addEventListener('click', e => start())
 dopSettings.addEventListener('click', e => change_dopSettings())
+
 //save_alloneButton.addEventListener('click', e => start_allone())
 settingsButton.addEventListener('click', e => lite_mod())
 rate.addEventListener('input', e => rate_str.textContent = rate.value >= 0 ? `+${rate.value}%` : `${rate.value}%`)
@@ -82,6 +84,7 @@ function set_dopSettings() {
 	document.querySelector('#div-pitch').style.display = display_dop
 	document.querySelector('#div-threads').style.display = display_dop
 	document.querySelector('#div-mergefiles').style.display = display_dop
+	document.querySelector('#div-lexx_register').style.display = display_dop
 }
 
 fileInputLex.addEventListener('change', (event) => {
@@ -158,6 +161,7 @@ function lite_mod() {
 	document.querySelector('#div-pitch').style.display = display_dop
 	document.querySelector('#div-threads').style.display = display_dop
 	document.querySelector('#div-mergefiles').style.display = display_dop
+	document.querySelector('#div-lexx_register').style.display = display_dop
 	
 	if (book && book.all_sentences.length > 0) {
 		textArea.value = ""
@@ -194,13 +198,13 @@ function get_text(_filename, _text, is_file) {
 			book.clear()
 			book = null
 		}
-
 		book = new ProcessingFile(
 			_filename,
 			_text,
 			FIRST_STRINGS_SIZE,
 			LAST_STRINGS_SIZE,
-			lexx
+			lexx,
+			cbLexxRegister.checked
 		)	
 	}
 	
@@ -434,9 +438,11 @@ function save_settings() {
 	localStorage.setItem('mergefiles_str_textContent' , mergefiles_str.textContent  )
 	localStorage.setItem('statArea_style_display'     , statArea.style.display      )
 	localStorage.setItem('dopSettings_textContent'    , dopSettings.textContent     )
+	localStorage.setItem('cbLexxRegister_checked'     , cbLexxRegister.checked      )
 }
 
 function load_settings() {
+	console.log(localStorage.getItem('cbLexxRegister_checked'     ))
 	if (localStorage.getItem('pointsSelect_value'         )) { pointsSelect.value          = localStorage.getItem('pointsSelect_value'         ) }
 	if (localStorage.getItem('pointsType_innerHTML'       )) { pointsType.innerHTML        = localStorage.getItem('pointsType_innerHTML'       ) }
 	if (localStorage.getItem('voice_value'                )) { voice.value                 = localStorage.getItem('voice_value'                ) }
@@ -450,5 +456,6 @@ function load_settings() {
 	if (localStorage.getItem('mergefiles_str_textContent' )) { mergefiles_str.textContent  = localStorage.getItem('mergefiles_str_textContent' ) }
 	if (localStorage.getItem('statArea_style_display'     )) { statArea.style.display      = localStorage.getItem('statArea_style_display'     ) }
 	if (localStorage.getItem('dopSettings_textContent'    )) { dopSettings.textContent     = localStorage.getItem('dopSettings_textContent'    ) }
+	if (localStorage.getItem('cbLexxRegister_checked'     )) { cbLexxRegister.checked      = localStorage.getItem('cbLexxRegister_checked'     ) === 'true' }
 	threads_info = { count: parseInt(max_threads.value), stat: stat_str }
 }

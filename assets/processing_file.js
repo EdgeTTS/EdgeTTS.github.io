@@ -1,11 +1,12 @@
 ﻿class ProcessingFile {
-	constructor(_file_name, _text, _FIRST_STRINGS_LENGTH, _LAST_STRINGS_LENGTH, _lang_lexx) {
+	constructor(_file_name, _text, _FIRST_STRINGS_LENGTH, _LAST_STRINGS_LENGTH, _lang_lexx, _lexx_register) {
 		this.file_names = []
 		this.file_names.push([_file_name, 0])
 		this.FIRST_STRINGS_LENGTH = _FIRST_STRINGS_LENGTH;
 		this.LAST_STRINGS_LENGTH = _LAST_STRINGS_LENGTH;
 		this.full_text = _text
 		this.lang_lexx = _lang_lexx
+		this.lexx_register = _lexx_register
 		this.pre_sentences = this.getFixPoints(this.full_text)
 		this.all_sentences = this.get_fix_section(this.pre_sentences)
 	}
@@ -39,18 +40,28 @@
 			if ( rule[0] == '"' ) {
 				const match_arr = rule.trim().replaceAll('"', "").split("=")
 				if ( match_arr.length == 2 ) {
-					const regex = new RegExp(this.get_escaped(match_arr[0]), 'giu');
-					fix_text = fix_text.replace(regex, match_arr[1]);
+					if (this.lexx_register == true) {
+						fix_text = fix_text.replaceAll(match_arr[0].toString(), match_arr[1].toString())
+					} else {
+						const regex = new RegExp(this.get_escaped(match_arr[0]), 'giu');
+						fix_text = fix_text.replace(regex, match_arr[1]);
+					}
 				}
 			} else {
-				const match_arr = rule.trim().split("=");
-				const escaped = this.get_escaped(match_arr[0]);
-				if (this.is_punctuation(match_arr[0]) == true) {
-					const regex = new RegExp(escaped, 'giu');
-					fix_text = fix_text.replace(regex, match_arr[1]);
+				const match_arr = rule.trim().split("=")
+				if (this.lexx_register == true) {
+					const match_arr = rule.trim().split("=")
+					const regex = new RegExp('(^|\\s)'+match_arr[0].toString()+'(?=\\s|$)', 'gi');				
+					fix_text = fix_text.replace(regex, '$1'+match_arr[1].toString())
 				} else {
-					const regex = new RegExp('(^|\\s|\\p{P})' + escaped + '(?=\\p{P}|\\s|$)', 'giu');
-					fix_text = fix_text.replace(regex, '$1' + match_arr[1]);
+					const escaped = this.get_escaped(match_arr[0]);
+					if (this.is_punctuation(match_arr[0]) == true) {
+						const regex = new RegExp(escaped, 'giu');
+						fix_text = fix_text.replace(regex, match_arr[1]);
+					} else {
+						const regex = new RegExp('(^|\\s|\\p{P})' + escaped + '(?=\\p{P}|\\s|$)', 'giu');
+						fix_text = fix_text.replace(regex, '$1' + match_arr[1]);
+					}
 				}
 			}
 		  }
