@@ -73,6 +73,7 @@ button {
     line-height: inherit;
     padding: .5rem;
     cursor: pointer;
+    border-radius: 10px;
 }
 
 rowspace {
@@ -84,6 +85,11 @@ rowspace {
 
 .voices, .pointsselect {
     width: 80%;
+    border-radius: 10px;
+}
+
+.voices option {
+    font-size: 0.9rem;
 }
 
 #settingsbutton, #pointstype {
@@ -300,4 +306,81 @@ rowspace {
 
 .checkbox-wrapper-2 .ikxBAC:checked:hover {
   background-color: #0b5ed7;
+}
+
+
+
+
+
+
+/* 1. Плавные переходы для интерактивных элементов */
+button, select, textarea, input[type="range"], .ikxBAC {
+    transition: 
+        background 0.2s, 
+        border-color 0.2s, 
+        box-shadow 0.2s, 
+        color 0.2s;
+}
+
+/* 2. Более заметное выделение (фокус) */
+button:focus, button:hover,
+select:focus, select:hover,
+textarea:focus, textarea:hover,
+input[type="range"]:focus, input[type="range"]:hover {
+    outline: none;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 2px #0d6efd55;
+    background-color: #2a2a2a;
+    z-index: 1;
+}
+
+/* Для чекбокса */
+.checkbox-wrapper-2 .ikxBAC:focus {
+    box-shadow: 0 0 0 2px #0d6efd55;
+    border-color: #0d6efd;
+}
+
+/* 3. Закругление textarea */
+textarea {
+    border-radius: 12px !important;
+}
+
+/* 4. Можно чуть увеличить радиус у select и input */
+select, input[type="range"] {
+    border-radius: 10px;
+}
+
+/* 5. Для плавности скролла (опционально) */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Для всех label, кроме неактивных */
+label {
+    transition: color 0.2s, text-shadow 0.2s;
+    cursor: pointer;
+}
+
+/* Эффект при наведении */
+label:hover, label:focus {
+    color: #fff;
+    text-shadow: 0 0 6px #0d6efd88;
+}
+
+/* Для ссылок внутри label */
+label a {
+    transition: color 0.2s, text-shadow 0.2s;
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+label a:hover, label a:focus {
+    color: #fff;
+    text-shadow: 0 0 6px #0d6efd88;
+    text-decoration: underline;
+}
+
+/* Для output внутри label (чтобы не мешал эффекту) */
+label output {
+    transition: color 0.2s;
 }
