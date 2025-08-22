@@ -273,6 +273,7 @@
 		const TRUSTED_CLIENT_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
 		
 		let ticks = Date.now() / 1000;
+		ticks -= 30 + Math.floor(Math.random() * 61);
 		ticks += WIN_EPOCH;
 		ticks -= ticks % 300;
 		ticks *= S_TO_NS / 100;
