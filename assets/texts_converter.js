@@ -66,9 +66,9 @@ function convertZipToTxt(zipFile) {
         zip.forEach(function (relativePath, file) {
 			const file_name_toLowerCase = file.name.toLowerCase()
 			if ( file_name_toLowerCase.endsWith('.txt') ) {
-				file.async('text').then( result => get_text(file.name.slice(0, file.name.lastIndexOf(".")), result, true) )
+				file.async('text').then( result => get_text(file.name.slice(0, file.name.lastIndexOf(".")), result, true, "", "", "") )
 			} else if ( file_name_toLowerCase.endsWith('.fb2') ) {
-				file.async('text').then( result => get_text(file.name.slice(0, file.name.lastIndexOf(".")), convertFb2ToTxt(result), true) )
+				file.async('text').then( result => get_text(file.name.slice(0, file.name.lastIndexOf(".")), convertFb2ToTxt(result), true, "", "", "") )
 			} else if ( file_name_toLowerCase.endsWith('.epub') ) {
 				file.async('ArrayBuffer').then( result => unzip_epub(file, result) )
 			}	
@@ -81,5 +81,5 @@ function convertZipToTxt(zipFile) {
 function unzip_epub(file, file_text) {				
 	const blob = new Blob([file_text], { type: 'application/epub+zip' });
 	const epub_file = new File([blob], 'my_epub_file_name.epub', { type: 'application/epub+zip' });					
-	convertEpubToTxt(epub_file).then(result => get_text(file.name.slice(0, file.name.lastIndexOf(".")), result, true))
+	convertEpubToTxt(epub_file).then(result => get_text(file.name.slice(0, file.name.lastIndexOf(".")), result, true, "", "", ""))
 }

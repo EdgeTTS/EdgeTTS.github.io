@@ -219,13 +219,13 @@ fileInput.addEventListener('change', (event) => {
 				const file_name_toLowerCase = file.name.toLowerCase()
 				
 				if ( file_name_toLowerCase.endsWith('.txt') ) {
-					get_text(file.name.slice(0, file.name.lastIndexOf(".")), reader.result, true)	
+					get_text(file.name.slice(0, file.name.lastIndexOf(".")), reader.result, true, "", "", "")	
 				} else if ( file_name_toLowerCase.endsWith('.ini') ) {
-					get_text(file.name.slice(0, file.name.lastIndexOf(".")), reader.result, true)	
+					get_text(file.name.slice(0, file.name.lastIndexOf(".")), reader.result, true, "", "", "")	
 				} else if ( file_name_toLowerCase.endsWith('.fb2') ) {
-					get_text(file.name.slice(0, file.name.lastIndexOf(".")), convertFb2ToTxt(reader.result), true)	
+					get_text(file.name.slice(0, file.name.lastIndexOf(".")), convertFb2ToTxt(reader.result), true, "", "", "")	
 				} else if ( file_name_toLowerCase.endsWith('.epub') ) {
-					convertEpubToTxt(file).then(result => get_text(file.name.slice(0, file.name.lastIndexOf(".")), result, true))
+					convertEpubToTxt(file).then(result => get_text(file.name.slice(0, file.name.lastIndexOf(".")), result, true, "", "", ""))
 				} else if ( file_name_toLowerCase.endsWith('.zip') ) {
 					convertZipToTxt(file)
 				}
@@ -274,14 +274,14 @@ function lite_mod() {
 	}
 }
 
-function get_text(_filename, _text, is_file) {
+function get_text(_filename, _text, is_file, _voice, _rate, _pitch) {
 	clearStatusBoxes()
 	if ( is_file == true ) {
 		textArea.value = ""
 	}	
 	
 	if (book && is_file) {
-		book.addNewText(_filename, _text)
+		book.addNewText(_filename, _text, _voice, _rate, _pitch)
 	} else {
 		if (book) {
 			book.clear()
@@ -293,7 +293,10 @@ function get_text(_filename, _text, is_file) {
 			FIRST_STRINGS_SIZE,
 			LAST_STRINGS_SIZE,
 			lexx,
-			cbLexxRegister.checked
+			cbLexxRegister.checked,
+			_voice,
+			_rate,
+			_pitch
 		)	
 	}
 	
@@ -329,6 +332,9 @@ function add_edge_tts(merge) {
 	if (run_work == true) {
 		if (book && num_book < threads_info.count) {
 			let file_name = book.file_names[file_name_ind][0]
+			let file_voice = book.file_names[file_name_ind][2] !== "" ? book.file_names[file_name_ind][2] : voice.value
+			let file_rate = book.file_names[file_name_ind][3] !== "" ? book.file_names[file_name_ind][3] : rate_str.textContent
+			let file_pitch = book.file_names[file_name_ind][4] !== "" ? book.file_names[file_name_ind][4] : String(pitch_str.textContent)
 			let timerId = setTimeout(function tick() {
 				if ( threads_info.count < parseInt(max_threads.value) ) {
 					threads_info.count = parseInt(max_threads.value)
@@ -337,17 +343,20 @@ function add_edge_tts(merge) {
 					if ( book.file_names[file_name_ind][1] > 0 && book.file_names[file_name_ind][1] <= num_book ) {
 						file_name_ind += 1
 						file_name = book.file_names[file_name_ind][0]
+						file_voice = book.file_names[file_name_ind][2] !== "" ? book.file_names[file_name_ind][2] : voice.value
+						file_rate = book.file_names[file_name_ind][3] !== "" ? book.file_names[file_name_ind][3] : rate_str.textContent
+						file_pitch = book.file_names[file_name_ind][4] !== "" ? book.file_names[file_name_ind][4] : String(pitch_str.textContent)
 						fix_num_book = num_book
 					}
 					
 					parts_book.push(
 						new SocketEdgeTTS(
 							num_book,
-							file_name,// + " " +
+							file_name,
 							(num_book+1-fix_num_book).toString().padStart(4, '0'),
-							"Microsoft Server Speech Text to Speech Voice (" + voice.value + ")",
-							String(pitch_str.textContent),
-							rate_str.textContent,
+							"Microsoft Server Speech Text to Speech Voice (" + file_voice + ")",
+							file_pitch,
+							file_rate,
 							"+0%",
 							book.all_sentences[num_book],
 							statArea,
@@ -373,7 +382,7 @@ function get_audio() {
 	
 	if ( !book_loaded )  {
 		num_text += 1
-		get_text("Text " + (num_text).toString().padStart(4, '0'), textArea.value, false)
+		get_text("Text " + (num_text).toString().padStart(4, '0'), textArea.value, false, "", "", "")
 	}
 	add_edge_tts(merge)
 }

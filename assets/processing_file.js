@@ -1,7 +1,7 @@
 ﻿class ProcessingFile {
-	constructor(_file_name, _text, _FIRST_STRINGS_LENGTH, _LAST_STRINGS_LENGTH, _lang_lexx, _lexx_register) {
+	constructor(_file_name, _text, _FIRST_STRINGS_LENGTH, _LAST_STRINGS_LENGTH, _lang_lexx, _lexx_register, _voice, _rate, _pitch) {
 		this.file_names = []
-		this.file_names.push([_file_name, 0])
+		this.file_names.push([_file_name, 0, _voice, _rate, _pitch])
 		this.FIRST_STRINGS_LENGTH = _FIRST_STRINGS_LENGTH;
 		this.LAST_STRINGS_LENGTH = _LAST_STRINGS_LENGTH;
 		this.full_text = _text
@@ -139,9 +139,9 @@
 	  return result;
 	}
 	
-	addNewText(_file_name, _text) {
+	addNewText(_file_name, _text, _voice, _rate, _pitch) {
 		this.file_names[this.file_names.length-1][1] = this.all_sentences.length
-		this.file_names.push([_file_name, 0])
+		this.file_names.push([_file_name, 0, _voice, _rate, _pitch])
 		const pre_sentences = this.getFixPoints(_text)
 		const new_sentences = this.get_fix_section(pre_sentences)
 		this.all_sentences = [...this.all_sentences, ...new_sentences]
@@ -150,7 +150,7 @@
 	clear() {
 		this.file_names.length = 0
 		this.file_names = []
-		this.file_names.push(["Книга", 0])
+		this.file_names.push(["Книга", 0, "", "", ""])
 		this.full_text = ""
 		this.pre_sentences.length = 0
 		this.all_sentences.length = 0
