@@ -365,7 +365,7 @@
     <div id="div-threads" class="slidecontainer">
 	  <br>
       <label for="max-threads">Количество потоков <output style="float: right;" id="max-threads-int">20</output></label>
-      <input type="range" min=1 max=30 value=20 step=1 class="max-threads" id="max-threads">
+      <input type="range" min=1 max=100 value=20 step=1 class="max-threads" id="max-threads">
     </div>
     <div id="div-mergefiles" class="slidecontainer">
 	  <br>
@@ -388,7 +388,7 @@
     <input type="file" id="file-input" accept=".txt, .fb2, .epub, .ini, .zip" multiple>
 	<button class="save" id="savebutton">Сохранить в MP3</button>
 	<br>
-	<textarea readonly class="text" id="stat-area"></textarea>
+	<div class="stat-container" id="stat-area"></div>
 	<br>
     <label id="stat-label"><output id="stat-info"></output> <output style="float: right;" id="stat-str">0 / 0</output></label>
   </section>

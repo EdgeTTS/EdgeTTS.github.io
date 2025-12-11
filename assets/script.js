@@ -23,6 +23,94 @@ const fileButton = document.getElementById('file-button')
 const dopSettings = document.getElementById('dop-settings-label')
 const cbLexxRegister = document.getElementById('lexx_register')
 
+// Функции для работы со статусами
+// === Функции для работы со статусами ===
+const statusNames = {
+    'stat-opened': 'Открыта',
+    'stat-started': 'Запущена',
+    'stat-processing': 'Обработка',
+    'stat-error': 'Ошибка - ПЕРЕЗАПУСК',
+    'stat-saved': 'Сохранена'
+};
+
+function getStatusClass(msg) {
+    if (msg === 'Открыта') return 'stat-opened';
+    if (msg === 'Запущена') return 'stat-started';
+    if (msg.includes('Обработка')) return 'stat-processing';
+    if (msg.includes('Ошибка')) return 'stat-error';
+    if (msg === 'Сохранена') return 'stat-saved';
+    return 'stat-opened';
+}
+
+function getStatusText(index, statusClass) {
+    return `Часть ${(index + 1).toString().padStart(4, '0')}: ${statusNames[statusClass] || 'Неизвестно'}`;
+}
+
+function addStatusBox(index, status) {
+    const box = document.createElement('div');
+    const statusClass = getStatusClass(status);
+    box.className = 'stat-box ' + statusClass;
+    box.dataset.index = index;
+    box.dataset.status = statusClass;
+    box.addEventListener('click', showStatusTooltip);
+    statArea.appendChild(box);
+}
+
+function updateStatusBox(index, status) {
+    const box = statArea.querySelector(`[data-index="${index}"]`);
+    if (box) {
+        const statusClass = getStatusClass(status);
+        box.className = 'stat-box ' + statusClass;
+        box.dataset.status = statusClass;
+    }
+}
+
+function clearStatusBoxes() {
+    statArea.innerHTML = '';
+}
+
+// Всплывающая подсказка при клике
+let activeTooltip = null;
+
+function showStatusTooltip(e) {
+    const box = e.target;
+    const index = box.dataset.index;
+    
+    // Если подсказка уже открыта для этого квадратика — закрыть
+    if (activeTooltip && activeTooltip.dataset.forIndex === index) {
+        activeTooltip.remove();
+        activeTooltip = null;
+        return;
+    }
+    
+    // Закрыть старую подсказку если есть
+    if (activeTooltip) {
+        activeTooltip.remove();
+    }
+    
+    // Создать новую
+    const tooltip = document.createElement('div');
+    tooltip.className = 'stat-tooltip';
+    tooltip.dataset.forIndex = index;
+    tooltip.textContent = getStatusText(parseInt(index), box.dataset.status);
+    document.body.appendChild(tooltip);
+    
+    // Позиционирование
+    const rect = box.getBoundingClientRect();
+    tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
+    tooltip.style.top = (rect.top - tooltip.offsetHeight - 6) + 'px';
+    
+    activeTooltip = tooltip;
+}
+
+// Закрыть при клике вне квадратиков
+document.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('stat-box') && activeTooltip) {
+        activeTooltip.remove();
+        activeTooltip = null;
+    }
+});
+
 saveButton.addEventListener('click', e => start())
 dopSettings.addEventListener('click', e => change_dopSettings())
 
@@ -37,7 +125,7 @@ window.addEventListener('beforeunload', function(event) { save_settings() });
 
 stat_info.addEventListener('click', () => {
 	if (textArea.style.display == 'none') {
-		statArea.style.display = (statArea.style.display == 'none') ? 'block' : 'none';
+		statArea.style.display = (statArea.style.display == 'none') ? 'flex' : 'none';
 	}
 });
 
@@ -107,7 +195,7 @@ fileInputLex.addEventListener('change', (event) => {
 fileInput.addEventListener('change', (event) => {
 	run_work = false
 	book_loaded = false
-	statArea.value = ""
+	clearStatusBoxes()
 	
 	if (book) {
 		book.clear()
@@ -154,9 +242,10 @@ fileInput.addEventListener('change', (event) => {
 
 function lite_mod() {
 	const display_str = (textArea.style.display == 'none') ? 'block' : 'none'
+	const display_stat = (textArea.style.display == 'none') ? 'flex' : 'none'
 	const display_dop = (textArea.style.display == 'none' || dopSettings.textContent == "︿") ? 'block' : 'none';
 	textArea.style.display = display_str;
-	statArea.style.display = display_str;
+	statArea.style.display = display_stat;
 	
 	document.querySelector('#div-pitch').style.display = display_dop
 	document.querySelector('#div-threads').style.display = display_dop
@@ -186,7 +275,7 @@ function lite_mod() {
 }
 
 function get_text(_filename, _text, is_file) {
-	statArea.value = ""
+	clearStatusBoxes()
 	if ( is_file == true ) {
 		textArea.value = ""
 	}	
@@ -214,7 +303,7 @@ function get_text(_filename, _text, is_file) {
 		if ( is_file == true && textArea.style.display != 'none') {
 			textArea.value += "Часть " + tmp_ind + ":\n" + part + "\n\n"
 		}
-		statArea.value += "Часть " + (tmp_ind).toString().padStart(4, '0') + ": Открыта\n"
+		addStatusBox(tmp_ind - 1, 'Открыта')
 	}
 	stat_info.textContent = ""//"Открыто"
 	stat_str.textContent = `0 / ${book.all_sentences.length}`
@@ -454,7 +543,7 @@ function load_settings() {
 	if (localStorage.getItem('pitch_str_textContent'      )) { pitch_str.textContent       = localStorage.getItem('pitch_str_textContent'      ) }
 	if (localStorage.getItem('max_threads_int_textContent')) { max_threads_int.textContent = localStorage.getItem('max_threads_int_textContent') }
 	if (localStorage.getItem('mergefiles_str_textContent' )) { mergefiles_str.textContent  = localStorage.getItem('mergefiles_str_textContent' ) }
-	if (localStorage.getItem('statArea_style_display'     )) { statArea.style.display      = localStorage.getItem('statArea_style_display'     ) }
+	if (localStorage.getItem('statArea_style_display'     )) { statArea.style.display      = localStorage.getItem('statArea_style_display'     ) === 'none' ? 'none' : 'flex' }
 	if (localStorage.getItem('dopSettings_textContent'    )) { dopSettings.textContent     = localStorage.getItem('dopSettings_textContent'    ) }
 	if (localStorage.getItem('cbLexxRegister_checked'     )) { cbLexxRegister.checked      = localStorage.getItem('cbLexxRegister_checked'     ) === 'true' }
 	threads_info = { count: parseInt(max_threads.value), stat: stat_str }

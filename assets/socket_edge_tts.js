@@ -121,9 +121,7 @@
 	}
 	
 	update_stat(msg) {
-		let statlines = this.statArea.value.split('\n');
-		statlines[this.indexpart]= "Часть " + (this.indexpart+1).toString().padStart(4, '0') + ": " + msg
-		this.statArea.value = statlines.join('\n')
+		updateStatusBox(this.indexpart, msg)
 	}
 
 	onSocketClose() {
@@ -137,7 +135,7 @@
 					self.my_uint8Array = new Uint8Array(0)
 					self.audios = []
 					self.start_works()
-				}, 10000)				
+				}, 6000)				
 			}
 		} else {
 			//this.update_stat("Сохранена и Закрыта")
