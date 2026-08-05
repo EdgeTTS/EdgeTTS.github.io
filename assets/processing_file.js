@@ -68,11 +68,11 @@
 		}
 	  }
 	  
-	  if (pointsSelect.value !== 'Не заменять точки') {
-		  if (pointsSelect.value == 'Заменять на три строки') {
+	  if (pointsSelect.value !== 'none' && pointsSelect.value !== '') {
+		  if (pointsSelect.value == 'lines') {
 			  fix_text = fix_text.replace(/\./g, '\r\n\r\n\r\n\r\n')
 		  } else {
-			  var new_point = pointsSelect.value[pointsSelect.value.length - 1]
+			  var new_point = pointsSelect.value
 			  if (pointsType.innerHTML === "V1") {
 				  fix_text = fix_text.replace(/\./g, new_point)
 			  } else if (pointsType.innerHTML === "V2") {
@@ -150,7 +150,7 @@
 	clear() {
 		this.file_names.length = 0
 		this.file_names = []
-		this.file_names.push(["Книга", 0, "", "", ""])
+		this.file_names.push([t('book'), 0, "", "", ""])
 		this.full_text = ""
 		this.pre_sentences.length = 0
 		this.all_sentences.length = 0

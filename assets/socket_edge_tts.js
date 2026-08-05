@@ -1,4 +1,8 @@
-﻿class SocketEdgeTTS {
+﻿const TRUSTED_CLIENT_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4"
+const EDGE_MAJOR_VERSION = "151.0.4129.59"
+const GEC_ERRORS_BEFORE_SYNC = 3
+
+class SocketEdgeTTS {
 	constructor(_indexpart, _filename, _filenum,
 				_voice, _pitch, _rate, _volume, _text,
 				_statArea, _obj_threads_info, _save_to_var) {
@@ -23,6 +27,8 @@
 		this.obj_threads_info = _obj_threads_info
 		this.end_message_received = false
 		this.start_save = false	
+		this.restart_pending = false
+		this.watchdog_id = 0
 		
 		//Start
 		this.start_works()
@@ -40,25 +46,36 @@
 		this.start_save = false
 	}
 
+	// UTC, как в приложении: локальное время сервер отклоняет.
 	date_to_string() {
-		const date = new Date()
-		const options = {
-			weekday: 'short',
-			month: 'short',
-			day: '2-digit',
-			year: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit',
-			second: '2-digit',
-			timeZoneName: 'short',
+		const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+		const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+		const d = new Date()
+		const pad = n => String(n).padStart(2, '0')
+		return days[d.getUTCDay()] + ' ' + months[d.getUTCMonth()] + ' ' + pad(d.getUTCDate()) + ' ' + d.getUTCFullYear() +
+			' ' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) +
+			' GMT+0000 (Coordinated Universal Time)'
+	}
+
+	// Аналог тайм-аута в poll() приложения: тишина дольше restart_delay_msec — перезапуск.
+	arm_watchdog() {
+		clearTimeout(this.watchdog_id)
+		if (Number.isFinite(restart_delay_msec)) {
+			this.watchdog_id = setTimeout(() => {
+				if (this.mp3_saved || this.restart_pending) return
+				if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
+					this.socket.close()
+				} else {
+					this.error_restart()
+				}
+			}, restart_delay_msec)
 		}
-		const dateString = date.toLocaleString('en-US', options)
-		return dateString.replace(/\u200E/g, '') + ' GMT+0000 (Coordinated Universal Time)'
-	}	
+	}
 
 	onSocketOpen(event) {
+		this.arm_watchdog()
 		this.end_message_received = false
-		this.update_stat("Запущена")
+		this.update_stat("started")
 		
 		var my_data = this.date_to_string()
 		this.socket.send(
@@ -66,7 +83,7 @@
 			"Content-Type:application/json; charset=utf-8\r\n" +
 			"Path:speech.config\r\n\r\n" +
 			'{"context":{"synthesis":{"audio":{"metadataoptions":{' +
-			'"sentenceBoundaryEnabled":false,"wordBoundaryEnabled":true},' +
+			'"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"true"},' +
 			'"outputFormat":"audio-24khz-96kbitrate-mono-mp3"' +
 			"}}}}\r\n"
 		)
@@ -81,6 +98,7 @@
 	}
 		
 	async onSocketMessage(event) {
+		this.arm_watchdog()
 		const data = await event.data
 		if ( typeof data == "string" ) {
 			if (data.includes("Path:turn.end")) {
@@ -126,45 +144,48 @@
 
 	onSocketClose() {
 		if ( !this.mp3_saved ) {
-			if ( this.end_message_received == true ) {
-				this.update_stat("         Обработка")
+			if ( this.end_message_received && !this.restart_pending ) {
+				this.update_stat("processing")
 			} else {
-				this.update_stat("Ошибка - ПЕЕЗАПУСК")
-				let self = this
-				let timerId = setTimeout(function tick() {
-					self.my_uint8Array = new Uint8Array(0)
-					self.audios = []
-					self.start_works()
-				}, 6000)				
+				this.error_restart()
 			}
-		} else {
-			//this.update_stat("Сохранена и Закрыта")
 		}
-		add_edge_tts(this.save_to_var)
+		add_edge_tts()
+	}
+
+	error_restart() {
+		if (this.restart_pending || this.mp3_saved) return
+		this.restart_pending = true
+		clearTimeout(this.watchdog_id)
+		this.update_stat("error")
+		SocketEdgeTTS.gec_report_error()
+		setTimeout(() => {
+			this.restart_pending = false
+			this.my_uint8Array = new Uint8Array(0)
+			this.audios = []
+			this.end_message_received = false
+			this.start_works()
+		}, 6000)
 	}
 	
 	start_works() {
-		//console.log("Start works...")//console.log(this.my_filename + " " + this.my_filenum + " start works...")
 		if ("WebSocket" in window) {
-			const SEC_MS_GEC_VERSION = "1-130.0.2849.68";
-			const secMsGec = this.generateSecMsGec();
-			
 			this.socket = new WebSocket(
 				"wss://speech.platform.bing.com/consumer/speech/synthesize/" +
-				"readaloud/edge/v1?TrustedClientToken=" +
-				"6A5AA1D4EAFF4E9FB37E23D68491D6F4" +
-				"&Sec-MS-GEC=" + secMsGec +
-				"&Sec-MS-GEC-Version=" + SEC_MS_GEC_VERSION +
+				"readaloud/edge/v1?TrustedClientToken=" + TRUSTED_CLIENT_TOKEN +
+				"&Sec-MS-GEC=" + this.generateSecMsGec() +
+				"&Sec-MS-GEC-Version=1-" + EDGE_MAJOR_VERSION +
 				"&ConnectionId=" + this.connect_id()
 			);
 			
 			this.socket.addEventListener('open', this.onSocketOpen.bind(this));
 			this.socket.addEventListener('message', this.onSocketMessage.bind(this));
 			this.socket.addEventListener('close', this.onSocketClose.bind(this));
+			this.arm_watchdog()
 		} else {
 			console.log("WebSocket NOT supported by your Browser!");
 		}
-		add_edge_tts(this.save_to_var)
+		add_edge_tts()
 	}
 
 	mkssml() {
@@ -268,10 +289,8 @@
 	generateSecMsGec() {
 		const WIN_EPOCH = 11644473600;
 		const S_TO_NS = 1e9;
-		const TRUSTED_CLIENT_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
 		
-		let ticks = Date.now() / 1000;
-		ticks -= 30 + Math.floor(Math.random() * 61);
+		let ticks = Date.now() / 1000 + SocketEdgeTTS.gec_clock_skew;
 		ticks += WIN_EPOCH;
 		ticks -= ticks % 300;
 		ticks *= S_TO_NS / 100;
@@ -280,9 +299,33 @@
 		
 		return this.sha256(strToHash).toUpperCase();
 	}
-	
-	
-	
+
+	static gec_clock_skew = 0
+	static gec_error_count = 0
+	static gec_sync_active = false
+
+	static gec_report_success() {
+		SocketEdgeTTS.gec_error_count = 0
+	}
+
+	static gec_report_error() {
+		SocketEdgeTTS.gec_error_count += 1
+		if (SocketEdgeTTS.gec_error_count >= GEC_ERRORS_BEFORE_SYNC && !SocketEdgeTTS.gec_sync_active) {
+			SocketEdgeTTS.gec_error_count = 0
+			SocketEdgeTTS.gec_sync_active = true
+			SocketEdgeTTS.gec_sync_clock_skew().finally(() => SocketEdgeTTS.gec_sync_active = false)
+		}
+	}
+
+	// Сдвиг часов (сек) по заголовку Date сервера озвучки; при неудаче остаётся прежним.
+	static async gec_sync_clock_skew() {
+		try {
+			const response = await fetch("https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/list?trustedclienttoken=" + TRUSTED_CLIENT_TOKEN, { cache: "no-store" })
+			const server_date = Date.parse(response.headers.get("Date"))
+			if (!isNaN(server_date)) SocketEdgeTTS.gec_clock_skew = (server_date - Date.now()) / 1000
+		} catch (e) {}
+	}
+
 	async saveFiles(blob) {
 		if (this.start_save == false) {
 			this.start_save = true
@@ -300,6 +343,8 @@
 		//console.log("Save_mp3");
 		if ( this.my_uint8Array.length > 0 ) {
 			this.mp3_saved = true
+			clearTimeout(this.watchdog_id)
+			SocketEdgeTTS.gec_report_success()
 			if ( !this.save_to_var ) {				
 				var blob_mp3 = new Blob([this.my_uint8Array.buffer]);
 				if (save_path_handle ?? false) {
@@ -316,13 +361,14 @@
 					this.clear()
 				}
 			}
-			this.update_stat("Сохранена")
-			this.obj_threads_info.count += 1
-			const stat_count = this.obj_threads_info.stat.textContent.split(' / ');
-			this.obj_threads_info.stat.textContent = String(Number(stat_count[0]) + 1) + " / " + stat_count[1]
-			add_edge_tts(this.save_to_var)
+			this.update_stat("saved")
+			this.obj_threads_info.saved += 1
+			const stat_total = this.obj_threads_info.stat.textContent.split(' / ')[1]
+			this.obj_threads_info.stat.textContent = this.obj_threads_info.saved + " / " + stat_total
+			add_edge_tts()
 		} else {
 			console.log("Bad Save_mp3");
+			this.error_restart()
 		}
 	}
 

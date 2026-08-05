@@ -11,7 +11,7 @@
 </head>
 
 <body>
-  <textarea class="text" id="text-area" placeholder="Текст..."></textarea>
+  <textarea class="text" id="text-area" data-i18n-placeholder="textarea" placeholder="Текст..."></textarea>
   <br>
   <section class="options">
     <rowspace>
@@ -343,59 +343,65 @@
     </rowspace>
     <rowspace>
 		<select class="pointsselect" id="pointsselect" name="pointsselect">
-			<option>Не заменять точки</option>
-			<option>Заменять точки на ,</option>
-			<option>Заменять точки на ;</option>
-			<option>Заменять точки на :</option>
-			<option>Заменять точки на -</option>
-			<option>Заменять на три строки</option>
+			<option value="none" data-i18n="points_keep">Не заменять точки</option>
+			<option value="," data-i18n="points_replace" data-i18n-suffix=",">Заменять точки на ,</option>
+			<option value=";" data-i18n="points_replace" data-i18n-suffix=";">Заменять точки на ;</option>
+			<option value=":" data-i18n="points_replace" data-i18n-suffix=":">Заменять точки на :</option>
+			<option value="-" data-i18n="points_replace" data-i18n-suffix="-">Заменять точки на -</option>
+			<option value="lines" data-i18n="points_lines">Заменять на три строки</option>
 		</select>
 		<button class="pointstype" id="pointstype" onclick="points_mod()">V1</button>
     </rowspace>
     <div id="div-rate" class="slidecontainer">
 	  <br>
-      <label for="rate">Скорость <output style="float: right;" id="rate-str">+100%</output></label>
+      <label for="rate"><span data-i18n="speed">Скорость</span> <output style="float: right;" id="rate-str">+100%</output></label>
       <input type="range" min="-50" max="100" value="100" step="5" class="rate" id="rate" list="ratemarks">
     </div>
     <div id="div-pitch" class="slidecontainer">
 	  <br>
-      <label for="pitch">Тональность <output style="float: right;" id="pitch-str">+0Hz</output></label>
+      <label for="pitch"><span data-i18n="pitch">Тональность</span> <output style="float: right;" id="pitch-str">+0Hz</output></label>
       <input type="range" min="-50" max="50" value="0" step="0" class="pitch" id="pitch">
     </div>
     <div id="div-threads" class="slidecontainer">
 	  <br>
-      <label for="max-threads">Количество потоков <output style="float: right;" id="max-threads-int">20</output></label>
+      <label for="max-threads"><span data-i18n="threads">Количество потоков</span> <output style="float: right;" id="max-threads-int">20</output></label>
       <input type="range" min=1 max=100 value=20 step=1 class="max-threads" id="max-threads">
     </div>
     <div id="div-mergefiles" class="slidecontainer">
 	  <br>
-      <label for="mergefiles">Объединять MP3 по<output style="float: right;" id="mergefiles-str">10 шт.</output></label>
+      <label for="mergefiles"><span data-i18n="merge">Объединять MP3 по</span><output style="float: right;" id="mergefiles-str">10 шт.</output></label>
       <input type="range" min=1 max=100 value=10 step=1 class="mergefiles" id="mergefiles">
+    </div>
+    <div id="div-restartdelay" class="slidecontainer">
+	  <br>
+      <label for="restartdelay"><span data-i18n="restart_delay">Задержка перезапуска</span> <output style="float: right;" id="restartdelay-str">10000</output></label>
+      <input type="range" step=1 class="restartdelay" id="restartdelay">
     </div>
 	<div id="div-lexx_register" class="checkbox-wrapper-2">
 		<br>
-		<label for="lexx_register" class="checkbox-label">Учитывать регистр словаря<input id="lexx_register" type="checkbox" class="sc-gJwTLC ikxBAC" checked></label>
+		<label for="lexx_register" class="checkbox-label"><span data-i18n="lexx_register">Учитывать регистр словаря</span><input id="lexx_register" type="checkbox" class="sc-gJwTLC ikxBAC" checked></label>
 	</div>
 	<label id="dop-settings-label">﹀</label>
 	<br>
     <myspace class="myspace">
-		<label id="left-label"><a href="./RU.lexx" id="is-lexx">Словарь</a></label>
-		<label id="right-label">Книги</label>
-		<button id="file-button-lex">Загрузить</button>
-		<button id="file-button">Открыть</button>
+		<label id="left-label"><a href="./RU.lexx" id="is-lexx" data-i18n="dict">Словарь</a></label>
+		<label id="right-label" data-i18n="books">Книги</label>
+		<button id="file-button-lex" data-i18n="load">Загрузить</button>
+		<button id="file-button" data-i18n="open">Открыть</button>
 	</myspace>
     <input type="file" id="file-input-lex" accept=".lexx">
     <input type="file" id="file-input" accept=".txt, .fb2, .epub, .ini, .zip" multiple>
-	<button class="save" id="savebutton">Сохранить в MP3</button>
+	<button class="save" id="savebutton" data-i18n="save_mp3">Сохранить в MP3</button>
 	<br>
 	<div class="stat-container" id="stat-area"></div>
 	<br>
     <label id="stat-label"><output id="stat-info"></output> <output style="float: right;" id="stat-str">0 / 0</output></label>
 	<br>
     <rowspace>
-		<div>Временно работает только через Edge браузер</div>
+		<div id="edge-note" data-i18n="edge_only" hidden>Работает только через Edge браузер</div>
     </rowspace>
   </section>
+  <script src="./assets/i18n.js"></script>
   <script src="./assets/jszip.min.js"></script>
   <script src="./assets/texts_converter.js"></script>
   <script src="./assets/processing_file.js"></script>

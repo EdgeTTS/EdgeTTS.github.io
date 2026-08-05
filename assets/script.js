@@ -7,6 +7,8 @@ const max_threads = document.querySelector('.max-threads')
 const max_threads_int = document.querySelector('#max-threads-int')
 const mergefiles = document.querySelector('.mergefiles')
 const mergefiles_str = document.querySelector('#mergefiles-str')
+const restart_delay = document.querySelector('.restartdelay')
+const restart_delay_str = document.querySelector('#restartdelay-str')
 const voice = document.querySelector('.voices')
 const saveButton = document.querySelector('.save')
 const settingsButton = document.querySelector('.settingsbutton')
@@ -23,35 +25,16 @@ const fileButton = document.getElementById('file-button')
 const dopSettings = document.getElementById('dop-settings-label')
 const cbLexxRegister = document.getElementById('lexx_register')
 
-// Функции для работы со статусами
-// === Функции для работы со статусами ===
-const statusNames = {
-    'stat-opened': 'Открыта',
-    'stat-started': 'Запущена',
-    'stat-processing': 'Обработка',
-    'stat-error': 'Ошибка - ПЕРЕЗАПУСК',
-    'stat-saved': 'Сохранена'
-};
-
-function getStatusClass(msg) {
-    if (msg === 'Открыта') return 'stat-opened';
-    if (msg === 'Запущена') return 'stat-started';
-    if (msg.includes('Обработка')) return 'stat-processing';
-    if (msg.includes('Ошибка')) return 'stat-error';
-    if (msg === 'Сохранена') return 'stat-saved';
-    return 'stat-opened';
-}
-
-function getStatusText(index, statusClass) {
-    return `Часть ${(index + 1).toString().padStart(4, '0')}: ${statusNames[statusClass] || 'Неизвестно'}`;
+// === Функции для работы со статусами (status — ключ: opened/started/processing/error/saved) ===
+function getStatusText(index, status) {
+    return `${t('part')} ${(index + 1).toString().padStart(4, '0')}: ${t('stat_' + status)}`;
 }
 
 function addStatusBox(index, status) {
     const box = document.createElement('div');
-    const statusClass = getStatusClass(status);
-    box.className = 'stat-box ' + statusClass;
+    box.className = 'stat-box stat-' + status;
     box.dataset.index = index;
-    box.dataset.status = statusClass;
+    box.dataset.status = status;
     box.addEventListener('click', showStatusTooltip);
     statArea.appendChild(box);
 }
@@ -59,9 +42,8 @@ function addStatusBox(index, status) {
 function updateStatusBox(index, status) {
     const box = statArea.querySelector(`[data-index="${index}"]`);
     if (box) {
-        const statusClass = getStatusClass(status);
-        box.className = 'stat-box ' + statusClass;
-        box.dataset.status = statusClass;
+        box.className = 'stat-box stat-' + status;
+        box.dataset.status = status;
     }
 }
 
@@ -116,10 +98,29 @@ dopSettings.addEventListener('click', e => change_dopSettings())
 
 //save_alloneButton.addEventListener('click', e => start_allone())
 settingsButton.addEventListener('click', e => lite_mod())
-rate.addEventListener('input', e => rate_str.textContent = rate.value >= 0 ? `+${rate.value}%` : `${rate.value}%`)
-pitch.addEventListener('input', e => pitch_str.textContent = pitch.value >= 0 ? `+${pitch.value}Hz` : `${pitch.value}Hz`)
-max_threads.addEventListener('input', e => max_threads_int.textContent = max_threads.value)
-mergefiles.addEventListener('input', e => mergefiles_str.textContent = mergefiles.value == 100 ? "ВСЕ" : `${mergefiles.value} шт.`)
+const update_rate_str = () => rate_str.textContent = rate.value >= 0 ? `+${rate.value}%` : `${rate.value}%`
+const update_pitch_str = () => pitch_str.textContent = pitch.value >= 0 ? `+${pitch.value}Hz` : `${pitch.value}Hz`
+const update_max_threads_int = () => max_threads_int.textContent = max_threads.value
+const update_mergefiles_str = () => mergefiles_str.textContent = mergefiles.value == 100 ? t('all') : `${mergefiles.value} ${t('unit')}`
+
+// Нелинейная шкала задержки перезапуска (сек); слайдер хранит индекс, последняя позиция — «∞».
+const RESTART_DELAY_STEPS = [10, 20, 30, 40, 60, 80, 100, 200, 300, 400, 600, 800, 1000, 2000, 3000, 4000, 6000, 8000, 10000]
+restart_delay.min = 0
+restart_delay.max = RESTART_DELAY_STEPS.length
+restart_delay.value = RESTART_DELAY_STEPS.length - 1
+var restart_delay_msec = Infinity
+const restart_delay_seconds = () => restart_delay.value < RESTART_DELAY_STEPS.length ? RESTART_DELAY_STEPS[restart_delay.value] : -1
+const update_restart_delay_str = () => {
+	const sec = restart_delay_seconds()
+	restart_delay_str.textContent = sec < 0 ? '∞' : String(sec)
+	restart_delay_msec = sec < 0 ? Infinity : sec * 1000
+}
+
+rate.addEventListener('input', update_rate_str)
+pitch.addEventListener('input', update_pitch_str)
+max_threads.addEventListener('input', () => { update_max_threads_int(); add_edge_tts() })
+mergefiles.addEventListener('input', update_mergefiles_str)
+restart_delay.addEventListener('input', update_restart_delay_str)
 window.addEventListener('beforeunload', function(event) { save_settings() });
 
 
@@ -140,11 +141,17 @@ var file_name_ind = 0
 var num_book = 0
 var num_text = 0
 var fix_num_book = 0
-var threads_info = { count: parseInt(max_threads.value), stat: stat_str }
+var threads_info = { saved: 0, stat: stat_str }
 var run_work = false
+var run_merge = false
+// Активных частей (num_book - saved) меньше лимита; лимит читается вживую, как в приложении.
+const has_free_thread = () => num_book < threads_info.saved + parseInt(max_threads.value)
 var save_path_handle
 
 document.addEventListener("DOMContentLoaded", function(event) {
+	if (!navigator.userAgent.includes('Edg/')) {
+		document.getElementById('edge-note').hidden = false
+	}
 	lite_mod()
 	load_settings()
 	set_dopSettings()
@@ -169,10 +176,9 @@ function change_dopSettings() {
 
 function set_dopSettings() {
 	const display_dop = (textArea.style.display == 'block' || dopSettings.textContent == "︿") ? 'block' : 'none';
-	document.querySelector('#div-pitch').style.display = display_dop
-	document.querySelector('#div-threads').style.display = display_dop
-	document.querySelector('#div-mergefiles').style.display = display_dop
-	document.querySelector('#div-lexx_register').style.display = display_dop
+	for (const id of ['#div-pitch', '#div-threads', '#div-mergefiles', '#div-restartdelay', '#div-lexx_register']) {
+		document.querySelector(id).style.display = display_dop
+	}
 }
 
 fileInputLex.addEventListener('change', (event) => {
@@ -186,9 +192,9 @@ fileInputLex.addEventListener('change', (event) => {
 			lexx = reader.result.split("\n")
 		}
 		reader.readAsText(file)
-		fileButtonLex.textContent = "Загружен"
+		fileButtonLex.textContent = t('loaded')
 	} else {
-		fileButtonLex.textContent = "Загрузить"
+		fileButtonLex.textContent = t('load')
 	}
 })
 
@@ -203,7 +209,7 @@ fileInput.addEventListener('change', (event) => {
 	}
 	
 	if (event.target.files.length == 0) {
-		fileButton.textContent = "Открыть"
+		fileButton.textContent = t('open')
 		stat_info.textContent = ""//"Открыто"
 	}
 	
@@ -212,7 +218,7 @@ fileInput.addEventListener('change', (event) => {
 		stat_str.textContent = "0 / 0"
 		
 		if (file) {
-			fileButton.textContent = "Обработка..."
+			fileButton.textContent = t('opening')
 			const reader = new FileReader()
 			reader.onload = () => {
 				book_loaded = true
@@ -229,12 +235,12 @@ fileInput.addEventListener('change', (event) => {
 				} else if ( file_name_toLowerCase.endsWith('.zip') ) {
 					convertZipToTxt(file)
 				}
-				fileButton.textContent = "Открыты"
+				fileButton.textContent = t('opened')
 			}
 			
 			reader.readAsText(file)
 		} else {
-			fileButton.textContent = "Открыть"
+			fileButton.textContent = t('open')
 		}
 	}
 
@@ -243,14 +249,9 @@ fileInput.addEventListener('change', (event) => {
 function lite_mod() {
 	const display_str = (textArea.style.display == 'none') ? 'block' : 'none'
 	const display_stat = (textArea.style.display == 'none') ? 'flex' : 'none'
-	const display_dop = (textArea.style.display == 'none' || dopSettings.textContent == "︿") ? 'block' : 'none';
 	textArea.style.display = display_str;
 	statArea.style.display = display_stat;
-	
-	document.querySelector('#div-pitch').style.display = display_dop
-	document.querySelector('#div-threads').style.display = display_dop
-	document.querySelector('#div-mergefiles').style.display = display_dop
-	document.querySelector('#div-lexx_register').style.display = display_dop
+	set_dopSettings()
 	
 	if (book && book.all_sentences.length > 0) {
 		textArea.value = ""
@@ -267,7 +268,7 @@ function lite_mod() {
 			let tmp_ind = 0
 			for (let part of book.all_sentences) {
 				tmp_ind += 1
-				textArea.value += "Часть " + tmp_ind + ":\n" + part + "\n\n"
+				textArea.value += t('part') + " " + tmp_ind + ":\n" + part + "\n\n"
 			}
 		}
 		
@@ -304,9 +305,9 @@ function get_text(_filename, _text, is_file, _voice, _rate, _pitch) {
 	for (let part of book.all_sentences) {
 		tmp_ind += 1
 		if ( is_file == true && textArea.style.display != 'none') {
-			textArea.value += "Часть " + tmp_ind + ":\n" + part + "\n\n"
+			textArea.value += t('part') + " " + tmp_ind + ":\n" + part + "\n\n"
 		}
-		addStatusBox(tmp_ind - 1, 'Открыта')
+		addStatusBox(tmp_ind - 1, 'opened')
 	}
 	stat_info.textContent = ""//"Открыто"
 	stat_str.textContent = `0 / ${book.all_sentences.length}`
@@ -325,21 +326,18 @@ function clear_old_run() {
 	file_name_ind = 0
 	num_book = 0
 	fix_num_book = 0
-	threads_info = { count: parseInt(max_threads.value), stat: stat_str }	
+	threads_info = { saved: 0, stat: stat_str }
 }
 
-function add_edge_tts(merge) {
+function add_edge_tts() {
 	if (run_work == true) {
-		if (book && num_book < threads_info.count) {
+		if (book && has_free_thread()) {
 			let file_name = book.file_names[file_name_ind][0]
 			let file_voice = book.file_names[file_name_ind][2] !== "" ? book.file_names[file_name_ind][2] : voice.value
 			let file_rate = book.file_names[file_name_ind][3] !== "" ? book.file_names[file_name_ind][3] : rate_str.textContent
 			let file_pitch = book.file_names[file_name_ind][4] !== "" ? book.file_names[file_name_ind][4] : String(pitch_str.textContent)
-			let timerId = setTimeout(function tick() {
-				if ( threads_info.count < parseInt(max_threads.value) ) {
-					threads_info.count = parseInt(max_threads.value)
-				}
-				if ( num_book < threads_info.count && num_book < book.all_sentences.length) {
+			setTimeout(function tick() {
+				if ( has_free_thread() && num_book < book.all_sentences.length) {
 					if ( book.file_names[file_name_ind][1] > 0 && book.file_names[file_name_ind][1] <= num_book ) {
 						file_name_ind += 1
 						file_name = book.file_names[file_name_ind][0]
@@ -361,30 +359,30 @@ function add_edge_tts(merge) {
 							book.all_sentences[num_book],
 							statArea,
 							threads_info,
-							merge
+							run_merge
 						)
 					)
 					num_book += 1
 				}
 			}, 100)
 		}
-		if (merge) do_marge()
+		if (run_merge) do_marge()
 	}
 }
 
 function get_audio() {
 	clear_old_run()
 	run_work = true
-	stat_info.textContent = "Обработано"
+	stat_info.textContent = t('processed')
 	const stat_count = stat_str.textContent.split(' / ');
 	stat_str.textContent = "0 / " + stat_count[1]
-	const merge = (mergefiles.value == 1) ? false : true;
+	run_merge = (mergefiles.value == 1) ? false : true;
 	
 	if ( !book_loaded )  {
 		num_text += 1
 		get_text("Text " + (num_text).toString().padStart(4, '0'), textArea.value, false, "", "", "")
 	}
-	add_edge_tts(merge)
+	add_edge_tts()
 }
 
 async function saveFiles(fix_filename, blob, from_ind, to_ind) {
@@ -530,30 +528,28 @@ function save_settings() {
 	localStorage.setItem('pitch_value'                , pitch.value                 )
 	localStorage.setItem('max_threads_value'          , max_threads.value           )
 	localStorage.setItem('mergefiles_value'           , mergefiles.value            )
-	localStorage.setItem('rate_str_textContent'       , rate_str.textContent        )
-	localStorage.setItem('pitch_str_textContent'      , pitch_str.textContent       )
-	localStorage.setItem('max_threads_int_textContent', max_threads_int.textContent )
-	localStorage.setItem('mergefiles_str_textContent' , mergefiles_str.textContent  )
+	localStorage.setItem('restart_delay_value'        , restart_delay.value         )
 	localStorage.setItem('statArea_style_display'     , statArea.style.display      )
 	localStorage.setItem('dopSettings_textContent'    , dopSettings.textContent     )
 	localStorage.setItem('cbLexxRegister_checked'     , cbLexxRegister.checked      )
 }
 
 function load_settings() {
-	console.log(localStorage.getItem('cbLexxRegister_checked'     ))
-	if (localStorage.getItem('pointsSelect_value'         )) { pointsSelect.value          = localStorage.getItem('pointsSelect_value'         ) }
+	const stored_points = localStorage.getItem('pointsSelect_value')
+	if (stored_points && [...pointsSelect.options].some(o => o.value === stored_points)) { pointsSelect.value = stored_points }
 	if (localStorage.getItem('pointsType_innerHTML'       )) { pointsType.innerHTML        = localStorage.getItem('pointsType_innerHTML'       ) }
 	if (localStorage.getItem('voice_value'                )) { voice.value                 = localStorage.getItem('voice_value'                ) }
 	if (localStorage.getItem('rate_value'                 )) { rate.value                  = localStorage.getItem('rate_value'                 ) }
 	if (localStorage.getItem('pitch_value'                )) { pitch.value                 = localStorage.getItem('pitch_value'                ) }
 	if (localStorage.getItem('max_threads_value'          )) { max_threads.value           = localStorage.getItem('max_threads_value'          ) }
 	if (localStorage.getItem('mergefiles_value'           )) { mergefiles.value            = localStorage.getItem('mergefiles_value'           ) }
-	if (localStorage.getItem('rate_str_textContent'       )) { rate_str.textContent        = localStorage.getItem('rate_str_textContent'       ) }
-	if (localStorage.getItem('pitch_str_textContent'      )) { pitch_str.textContent       = localStorage.getItem('pitch_str_textContent'      ) }
-	if (localStorage.getItem('max_threads_int_textContent')) { max_threads_int.textContent = localStorage.getItem('max_threads_int_textContent') }
-	if (localStorage.getItem('mergefiles_str_textContent' )) { mergefiles_str.textContent  = localStorage.getItem('mergefiles_str_textContent' ) }
+	if (localStorage.getItem('restart_delay_value'        )) { restart_delay.value         = localStorage.getItem('restart_delay_value'        ) }
 	if (localStorage.getItem('statArea_style_display'     )) { statArea.style.display      = localStorage.getItem('statArea_style_display'     ) === 'none' ? 'none' : 'flex' }
 	if (localStorage.getItem('dopSettings_textContent'    )) { dopSettings.textContent     = localStorage.getItem('dopSettings_textContent'    ) }
 	if (localStorage.getItem('cbLexxRegister_checked'     )) { cbLexxRegister.checked      = localStorage.getItem('cbLexxRegister_checked'     ) === 'true' }
-	threads_info = { count: parseInt(max_threads.value), stat: stat_str }
+	update_rate_str()
+	update_pitch_str()
+	update_max_threads_int()
+	update_mergefiles_str()
+	update_restart_delay_str()
 }
