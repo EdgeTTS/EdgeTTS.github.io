@@ -1,60 +1,74 @@
-﻿//FB2 to TXT
+﻿//DOM to TXT
+// Строчные элементы FB2 и XHTML: их текст продолжает текущую строку.
+// Все остальные элементы (абзацы, заголовки, секции, стихи, ячейки, <br>…) считаются блочными
+// и начинают новую строку — для незнакомого тега лишний перенос безопаснее склеенных слов.
+const INLINE_TAGS = new Set([
+	'a', 'emphasis', 'strong', 'strikethrough', 'sub', 'sup', 'code', 'style',                          // FB2
+	'span', 'em', 'i', 'b', 'u', 's', 'small', 'big', 'abbr', 'q', 'font', 'mark', 'del', 'ins', 'tt'  // XHTML
+])
+
+// Текст дерева в виде строк: обход в глубину посещает каждый текстовый узел ровно один раз,
+// поэтому вложенные секции/главы не дублируются, а абзацы не склеиваются.
+function domToText(root) {
+	const lines = []
+	let line = ''
+	const breakLine = () => {
+		const text = line.replace(/[ \t\r\n]+/g, ' ').trim()
+		if (text) lines.push(text)
+		line = ''
+	}
+	const walk = node => {
+		for (const child of node.childNodes) {
+			if (child.nodeType === Node.TEXT_NODE || child.nodeType === Node.CDATA_SECTION_NODE) {
+				line += child.data
+			} else if (child.nodeType === Node.ELEMENT_NODE) {
+				const is_block = !INLINE_TAGS.has(child.localName)
+				if (is_block) breakLine()
+				walk(child)
+				if (is_block) breakLine()
+			}
+		}
+	}
+	walk(root)
+	breakLine()
+	return lines.join('\n')
+}
+
+//FB2 to TXT
 function convertFb2ToTxt(fb2String) {
-    const parser = new DOMParser();
-    const fb2Doc = parser.parseFromString(fb2String.replace(/<p>/g, "\n<p>"), 'application/xml');
-    let textContent = '';
-    const bodyNode = fb2Doc.getElementsByTagName('body')[0];
-    if (bodyNode) {
-        const sectionNodes = bodyNode.getElementsByTagName('section');
-        for (let i = 0; i < sectionNodes.length; i++) {
-            const sectionNode = sectionNodes[i];
-            const sectionText = sectionNode.textContent;
-            textContent += sectionText + '\n\n';
-        }
-    }
-    const txtString = textContent.trim();
-    return txtString;
+	const fb2Doc = new DOMParser().parseFromString(fb2String, 'application/xml')
+	// Основной текст — первый <body>; следующие (name="notes" и т. п.) содержат сноски
+	const bodyNode = fb2Doc.getElementsByTagName('body')[0]
+	return bodyNode ? domToText(bodyNode) : ''
 }
 
 //EPUB to TXT
+// Порядок чтения задаёт spine из OPF: каждый файл книги входит в него ровно один раз.
+// Оглавление (toc.ncx) для этого не годится: его пункты вложены и могут ссылаться
+// на один файл несколько раз (chapter.xhtml#a, chapter.xhtml#b) или пропускать файлы.
 async function convertEpubToTxt(epubBinary) {
-    const zip = await JSZip.loadAsync(epubBinary);
-    const textFiles = [];
-	var toc_path = ""
-	zip.forEach((relativePath, zipEntry) => {
-		if ( zipEntry.name.endsWith('.ncx') ) {
-			toc_path = relativePath.slice(0, relativePath.lastIndexOf("toc.ncx"))
-		}
-	});	
-	
-    const toc = await zip.file(toc_path + 'toc.ncx').async('text');
-    const parser = new DOMParser();
-    const tocDoc = parser.parseFromString(toc, 'application/xml');
-    const navPoints = tocDoc.getElementsByTagName('navPoint');
-    for (let i = 0; i < navPoints.length; i++) {
-        const src = toc_path + navPoints[i].getElementsByTagName('content')[0].getAttribute('src').split("#")[0];
-        const file = zip.file(src);
-        if (file) {
-            textFiles.push(file);
-        }
-    }
-    let textContent = '';
-    for (const file of textFiles) {
-        const fileText = await file.async('text');
-        const htmlDoc = parser.parseFromString(fileText, 'application/xhtml+xml');
-        const bodyNode = htmlDoc.getElementsByTagNameNS('http://www.w3.org/1999/xhtml', 'body')[0];
-        if (bodyNode) {
-            const textNodes = bodyNode.childNodes;
-            for (let i = 0; i < textNodes.length; i++) {
-                const node = textNodes[i];
-                if (node.textContent.trim() !== '') {
-                    textContent += node.textContent.trim() + '\n';
-                }
-            }
-            textContent += '\n\n';
-        }
-    }
-    return await textContent.trim();
+	const zip = await JSZip.loadAsync(epubBinary)
+	const parser = new DOMParser()
+	const parseFile = async (path, type) => parser.parseFromString(await zip.file(path).async('text'), type)
+
+	const opfPath = (await parseFile('META-INF/container.xml', 'application/xml'))
+		.getElementsByTagName('rootfile')[0].getAttribute('full-path')
+	const opfDoc = await parseFile(opfPath, 'application/xml')
+	const hrefById = new Map([...opfDoc.getElementsByTagName('item')].map(item => [item.getAttribute('id'), item.getAttribute('href')]))
+	// href в OPF — URL относительно самого OPF (может содержать ../ и %-кодирование)
+	const resolve = href => decodeURIComponent(new URL(href, 'file:///' + opfPath).pathname.slice(1))
+
+	const chapters = []
+	for (const itemref of opfDoc.getElementsByTagName('itemref')) {
+		if (itemref.getAttribute('linear') === 'no') continue // вспомогательное содержимое вне основного чтения (сноски и т. п.)
+		const href = hrefById.get(itemref.getAttribute('idref'))
+		const path = href && resolve(href)
+		if (!path || !zip.file(path)) continue
+		const htmlDoc = await parseFile(path, 'application/xhtml+xml')
+		const bodyNode = htmlDoc.getElementsByTagNameNS('http://www.w3.org/1999/xhtml', 'body')[0]
+		if (bodyNode) chapters.push(domToText(bodyNode))
+	}
+	return chapters.join('\n')
 }
 
 
